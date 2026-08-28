@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#222">
+<title>Учёт материалов</title>
+<script src="https://unpkg.com/@zxing/library@0.21.3/umd/index.min.js"></script>
+<style>
+*{box-sizing:border-box}body{margin:0;padding:18px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:#f4f4f4;color:#222}
+.app{max-width:520px;margin:0 auto}h1{text-align:center;font-size:25px;margin:12px 0 5px}.subtitle{text-align:center;color:#777;margin-bottom:20px}
+.card{background:#fff;border-radius:16px;padding:18px;margin-bottom:15px;box-shadow:0 2px 10px rgba(0,0,0,.06)}
+button{width:100%;border:0;border-radius:12px;padding:17px;font-size:18px;font-weight:600;cursor:pointer}.scan{background:#222;color:#fff}.stop{display:none;margin-top:10px;background:#ddd;color:#222}.save{margin-top:18px;background:#1677ff;color:#fff}
+#scanner{display:none;position:relative;margin-top:15px;overflow:hidden;border-radius:14px;background:#000}#video{width:100%;display:block;background:#000}
+.frame{position:absolute;left:7%;right:7%;top:38%;height:24%;border:3px solid #fff;border-radius:8px;pointer-events:none}
+.hint{position:absolute;left:0;right:0;bottom:12px;color:#fff;text-align:center;font-size:14px;text-shadow:0 1px 3px #000}
+label{display:block;font-weight:600;margin-top:14px}input{width:100%;padding:15px;margin-top:7px;border:1px solid #ccc;border-radius:10px;font-size:18px}
+#status{display:none;margin-top:14px;padding:13px;border-radius:10px;font-size:16px}.success{background:#e9f7e9;color:#176b17}.error{background:#fdecec;color:#a00000}.info{background:#eef3f8;color:#333}
+.small{margin-top:12px;font-size:13px;color:#777;line-height:1.4}
+</style>
+</head>
+<body>
+<div class="app">
+<h1>УЧЁТ МАТЕРИАЛОВ</h1>
+<div class="subtitle">Сканирование расходников</div>
+<div class="card">
+<button id="start" class="scan" onclick="startScanner()">📷 СКАНИРОВАТЬ ШТРИХКОД</button>
+<div id="scanner"><video id="video" autoplay muted playsinline></video><div class="frame"></div><div class="hint">Наведите рамку на штрихкод</div></div>
+<button id="stop" class="stop" onclick="stopScanner()">ОСТАНОВИТЬ</button>
+</div>
+<div class="card">
+<label>Штрихкод</label>
+<input id="barcode" type="text" inputmode="numeric" placeholder="Код появится автоматически">
+<label>Количество</label>
+<input id="quantity" type="number" min="1" step="1" value="1">
+<button class="save" onclick="saveData()">СОХРАНИТЬ</button>
+<div id="status"></div>
+<div class="small">Дата и время сканирования фиксируются сервером Google в момент сохранения.</div>
+</div>
+</div>
+<script>
+const BACKEND_URL="https://script.google.com/macros/s/AKfycbxoJXLeVPG3Yiqx6tTovtkONlXNfPwXgqJyrAcCDf_gSksrzTHSifwKZkIJkH7_s99O-g/exec";
+let reader=null,stream=null,scanning=false;
+function status(message,type){const e=document.getElementById("status");e.style.display="block";e.className="";e.id="status";e.classList.add(type||"info");e.textContent=message}
+async function startScanner(){
+if(!window.ZXing){status("Не загрузился модуль сканирования. Проверьте интернет.","error");return}
+if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){status("Браузер не поддерживает доступ к камере.","error");return}
+document.getElementById("scanner").style.display="block";document.getElementById("start").style.display="none";document.getElementById("stop").style.display="block";status("Запускаю камеру...","info");
+try{
+stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:"environment"},width:{ideal:1280},height:{ideal:720}}});
+const video=document.getElementById("video");video.srcObject=stream;video.setAttribute("playsinline","");video.muted=true;await video.play();
+const hints=new Map();hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS,[ZXing.BarcodeFormat.EAN_13,ZXing.BarcodeFormat.EAN_8,ZXing.BarcodeFormat.CODE_128,ZXing.BarcodeFormat.CODE_39,ZXing.BarcodeFormat.QR_CODE,ZXing.BarcodeFormat.DATA_MATRIX]);
+reader=new ZXing.BrowserMultiFormatReader(hints);scanning=true;status("Камера работает. Наведите на штрихкод.","info");
+reader.decodeFromVideoElement(video,(result,error)=>{if(!scanning||!result)return;document.getElementById("barcode").value=result.getText();status("✓ Штрихкод считан: "+result.getText(),"success");stopScanner()});
+}catch(e){stopScanner();status("Не удалось открыть камеру: "+(e.name||e.message),"error")}
+}
+function stopScanner(){scanning=false;if(reader){try{reader.reset()}catch(e){}reader=null}if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}document.getElementById("scanner").style.display="none";document.getElementById("start").style.display="block";document.getElementById("stop").style.display="none"}
+function saveData(){
+const barcode=document.getElementById("barcode").value.trim(),quantity=Number(document.getElementById("quantity").value);
+if(!barcode){status("Сначала отсканируйте штрихкод.","error");return}
+if(!Number.isFinite(quantity)||quantity<=0){status("Введите количество.","error");return}
+if(BACKEND_URL.includes("PASTE_YOUR")){status("Не задан адрес Google Apps Script.","error");return}
+status("Сохраняю...","info");
+const iframe=document.createElement("iframe");iframe.name="saveFrame_"+Date.now();iframe.style.display="none";document.body.appendChild(iframe);
+const form=document.createElement("form");form.method="GET";form.action=BACKEND_URL;form.target=iframe.name;form.style.display="none";
+for(const [name,value] of Object.entries({action:"save",barcode,quantity:String(quantity)})){const i=document.createElement("input");i.type="hidden";i.name=name;i.value=value;form.appendChild(i)}
+document.body.appendChild(form);form.submit();
+setTimeout(()=>{form.remove();iframe.remove();status("✓ Запись отправлена в Google Sheets","success");document.getElementById("barcode").value="";document.getElementById("quantity").value="1"},900)
+}
+</script>
+</body>
+</html>
