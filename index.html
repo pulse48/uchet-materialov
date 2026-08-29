@@ -1,145 +1,874 @@
 <!doctype html>
 <html lang="ru">
+
 <head>
+
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+
+<meta name="viewport"
+content="width=device-width,
+initial-scale=1,
+maximum-scale=1,
+viewport-fit=cover">
+
 <meta name="theme-color" content="#222">
+
 <title>Учёт материалов</title>
+
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+
 <style>
-*{box-sizing:border-box}
-body{margin:0;padding:18px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:#f4f4f4;color:#222}
-.app{max-width:520px;margin:auto}
-h1{text-align:center;font-size:25px;margin:12px 0 5px}
-.subtitle{text-align:center;color:#777;margin-bottom:20px}
-.card{background:#fff;border-radius:16px;padding:18px;margin-bottom:15px;box-shadow:0 2px 10px rgba(0,0,0,.06)}
-button{width:100%;border:0;border-radius:12px;padding:17px;font-size:18px;font-weight:600}
-.scan{background:#222;color:#fff}.stop{display:none;margin-top:10px;background:#ddd;color:#222}.save{margin-top:18px;background:#1677ff;color:#fff}
-#scanner{display:none;position:relative;margin-top:15px;overflow:hidden;border-radius:14px;background:#000}
-#video{width:100%;display:block}
-.frame{position:absolute;left:10%;right:10%;top:28%;height:44%;border:3px solid #fff;border-radius:10px;pointer-events:none}
-.hint{position:absolute;bottom:12px;left:0;right:0;text-align:center;color:#fff;font-size:14px;text-shadow:0 1px 3px #000}
-label{display:block;font-weight:600;margin-top:14px}
-input{width:100%;padding:15px;margin-top:7px;border:1px solid #ccc;border-radius:10px;font-size:18px}
-#status{display:none;margin-top:14px;padding:13px;border-radius:10px;font-size:16px}
-.success{background:#e9f7e9;color:#176b17}.error{background:#fdecec;color:#a00000}.info{background:#eef3f8;color:#333}
-.small{margin-top:12px;font-size:13px;color:#777;line-height:1.4}
-canvas{display:none}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 18px;
+
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Arial,
+    sans-serif;
+
+  background: #f4f4f4;
+  color: #222;
+}
+
+.app {
+  max-width: 520px;
+  margin: auto;
+}
+
+h1 {
+  text-align: center;
+  font-size: 25px;
+  margin: 12px 0 5px;
+}
+
+.subtitle {
+  text-align: center;
+  color: #777;
+  margin-bottom: 20px;
+}
+
+.card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 18px;
+  margin-bottom: 15px;
+
+  box-shadow:
+    0 2px 10px rgba(0,0,0,.06);
+}
+
+button {
+  width: 100%;
+  border: 0;
+  border-radius: 12px;
+  padding: 17px;
+
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.scan {
+  background: #222;
+  color: #fff;
+}
+
+.stop {
+  display: none;
+  margin-top: 10px;
+  background: #ddd;
+  color: #222;
+}
+
+.save {
+  margin-top: 18px;
+  background: #1677ff;
+  color: #fff;
+}
+
+#scanner {
+
+  display: none;
+
+  position: relative;
+
+  margin-top: 15px;
+
+  overflow: hidden;
+
+  border-radius: 14px;
+
+  background: #000;
+}
+
+#video {
+  width: 100%;
+  display: block;
+}
+
+.frame {
+
+  position: absolute;
+
+  left: 10%;
+  right: 10%;
+
+  top: 28%;
+
+  height: 44%;
+
+  border: 3px solid #fff;
+
+  border-radius: 10px;
+
+  pointer-events: none;
+}
+
+.hint {
+
+  position: absolute;
+
+  bottom: 12px;
+
+  left: 0;
+  right: 0;
+
+  text-align: center;
+
+  color: #fff;
+
+  font-size: 14px;
+
+  text-shadow:
+    0 1px 3px #000;
+}
+
+label {
+
+  display: block;
+
+  font-weight: 600;
+
+  margin-top: 14px;
+}
+
+input {
+
+  width: 100%;
+
+  padding: 15px;
+
+  margin-top: 7px;
+
+  border:
+    1px solid #ccc;
+
+  border-radius: 10px;
+
+  font-size: 18px;
+}
+
+#status {
+
+  display: none;
+
+  margin-top: 14px;
+
+  padding: 13px;
+
+  border-radius: 10px;
+
+  font-size: 16px;
+}
+
+.success {
+
+  background: #e9f7e9;
+
+  color: #176b17;
+}
+
+.error {
+
+  background: #fdecec;
+
+  color: #a00000;
+}
+
+.info {
+
+  background: #eef3f8;
+
+  color: #333;
+}
+
+canvas {
+  display: none;
+}
+
 </style>
+
 </head>
+
+
 <body>
+
+
 <div class="app">
-<h1>УЧЁТ МАТЕРИАЛОВ</h1>
-<div class="subtitle">Сканирование расходников</div>
+
+
+<h1>
+УЧЁТ МАТЕРИАЛОВ
+</h1>
+
+
+<div class="subtitle">
+Сканирование расходников
+</div>
+
 
 <div class="card">
-<button id="start" class="scan" onclick="startScanner()">📷 СКАНИРОВАТЬ QR-КОД</button>
+
+
+<button
+id="start"
+class="scan"
+onclick="startScanner()">
+
+📷 СКАНИРОВАТЬ QR-КОД
+
+</button>
+
+
 <div id="scanner">
-<video id="video" autoplay muted playsinline></video>
-<div class="frame"></div>
-<div class="hint">Заполните рамку QR-кодом и держите телефон ровно</div>
-</div>
-<button id="stop" class="stop" onclick="stopScanner()">ОСТАНОВИТЬ</button>
-<canvas id="canvas"></canvas>
+
+
+<video
+id="video"
+autoplay
+muted
+playsinline>
+</video>
+
+
+<div class="frame">
 </div>
 
+
+<div class="hint">
+
+Наведите рамку на QR-код
+
+</div>
+
+
+</div>
+
+
+<button
+id="stop"
+class="stop"
+onclick="stopScanner()">
+
+ОСТАНОВИТЬ
+
+</button>
+
+
+<canvas id="canvas">
+</canvas>
+
+
+</div>
+
+
 <div class="card">
-<label>Данные QR</label>
-<input id="barcode" type="text" placeholder="После сканирования появятся данные">
-<label>Количество</label>
-<input id="quantity" type="number" min="1" step="1" value="1">
-<button class="save" onclick="saveData()">СОХРАНИТЬ</button>
-<div id="status"></div>
-<div class="small">Дата и время ставятся Google-сервером при сохранении.</div>
+
+
+<label>
+Данные QR
+</label>
+
+
+<input
+id="barcode"
+type="text"
+placeholder="После сканирования появятся данные">
+
+
+<label>
+Количество
+</label>
+
+
+<input
+id="quantity"
+type="number"
+min="1"
+step="1"
+value="1">
+
+
+<button
+id="save"
+class="save"
+onclick="saveData()">
+
+СОХРАНИТЬ
+
+</button>
+
+
+<div id="status">
 </div>
+
+
 </div>
+
+
+</div>
+
 
 <script>
-const BACKEND_URL="https://script.google.com/macros/s/AKfycbxoJXLeVPG3Yiqx6tTovtkONlXNfPwXgqJyrAcCDf_gSksrzTHSifwKZkIJkH7_s99O-g/exec";
-let stream=null, scanning=false, timer=null;
 
-function status(msg,type){
- const e=document.getElementById("status");
- e.style.display="block"; e.className=""; e.id="status";
- e.classList.add(type||"info"); e.textContent=msg;
+
+const BACKEND_URL =
+"https://script.google.com/macros/s/AKfycbxoJXLeVPG3Yiqx6tTovtkONlXNfPwXgqJyrAcCDf_gSksrzTHSifwKZkIJkH7_s99O-g/exec";
+
+
+let stream = null;
+
+let scanning = false;
+
+let timer = null;
+
+
+
+function showStatus(
+  message,
+  type
+) {
+
+  const element =
+    document.getElementById(
+      "status"
+    );
+
+  element.style.display =
+    "block";
+
+  element.className = "";
+
+  element.classList.add(
+    type || "info"
+  );
+
+  element.textContent =
+    message;
 }
 
-async function startScanner(){
- if(typeof jsQR!=="function"){status("Не загрузилась библиотека QR-сканирования. Проверьте интернет.","error");return}
- try{
-   stream=await navigator.mediaDevices.getUserMedia({
-     audio:false,
-     video:{facingMode:{ideal:"environment"},width:{ideal:1920},height:{ideal:1080}}
-   });
-   const v=document.getElementById("video");
-   v.srcObject=stream; v.setAttribute("playsinline",""); v.muted=true;
-   await v.play();
-   document.getElementById("scanner").style.display="block";
-   document.getElementById("start").style.display="none";
-   document.getElementById("stop").style.display="block";
-   scanning=true;
-   status("Камера работает. Ищу QR-код...","info");
-   scanLoop();
- }catch(e){
-   stopScanner();
-   status("Не удалось открыть камеру: "+(e.name||e.message),"error");
- }
-}
 
-function scanLoop(){
- if(!scanning)return;
- const v=document.getElementById("video");
- const c=document.getElementById("canvas");
- if(v.readyState>=2 && v.videoWidth){
-   c.width=v.videoWidth; c.height=v.videoHeight;
-   const ctx=c.getContext("2d",{willReadFrequently:true});
-   ctx.drawImage(v,0,0,c.width,c.height);
-   const img=ctx.getImageData(0,0,c.width,c.height);
-   const code=jsQR(img.data,img.width,img.height,{inversionAttempts:"attemptBoth"});
-   if(code && code.data){
-      document.getElementById("barcode").value=code.data;
-      status("✓ QR-код считан","success");
-      stopScanner();
+
+async function startScanner() {
+
+  try {
+
+    if (
+      !navigator.mediaDevices ||
+      !navigator.mediaDevices.getUserMedia
+    ) {
+
+      showStatus(
+        "Браузер не поддерживает камеру.",
+        "error"
+      );
+
       return;
-   }
- }
- timer=setTimeout(scanLoop,120);
+    }
+
+
+    stream =
+      await navigator.mediaDevices.getUserMedia({
+
+        audio: false,
+
+        video: {
+
+          facingMode: {
+            ideal: "environment"
+          },
+
+          width: {
+            ideal: 1920
+          },
+
+          height: {
+            ideal: 1080
+          }
+
+        }
+
+      });
+
+
+    const video =
+      document.getElementById(
+        "video"
+      );
+
+
+    video.srcObject =
+      stream;
+
+
+    video.setAttribute(
+      "playsinline",
+      ""
+    );
+
+
+    video.muted = true;
+
+
+    await video.play();
+
+
+    document.getElementById(
+      "scanner"
+    ).style.display =
+      "block";
+
+
+    document.getElementById(
+      "start"
+    ).style.display =
+      "none";
+
+
+    document.getElementById(
+      "stop"
+    ).style.display =
+      "block";
+
+
+    scanning = true;
+
+
+    showStatus(
+      "Камера работает. Ищу QR-код...",
+      "info"
+    );
+
+
+    scanLoop();
+
+
+  }
+
+  catch (error) {
+
+    stopScanner();
+
+
+    showStatus(
+      "Не удалось открыть камеру: " +
+      (error.name ||
+       error.message),
+
+      "error"
+    );
+
+  }
+
 }
 
-function stopScanner(){
- scanning=false;
- if(timer)clearTimeout(timer);
- timer=null;
- if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}
- const v=document.getElementById("video");
- v.srcObject=null;
- document.getElementById("scanner").style.display="none";
- document.getElementById("start").style.display="block";
- document.getElementById("stop").style.display="none";
+
+
+function scanLoop() {
+
+
+  if (!scanning) {
+    return;
+  }
+
+
+  const video =
+    document.getElementById(
+      "video"
+    );
+
+
+  const canvas =
+    document.getElementById(
+      "canvas"
+    );
+
+
+  if (
+    video.readyState >= 2 &&
+    video.videoWidth
+  ) {
+
+
+    canvas.width =
+      video.videoWidth;
+
+
+    canvas.height =
+      video.videoHeight;
+
+
+    const context =
+      canvas.getContext(
+        "2d",
+        {
+          willReadFrequently: true
+        }
+      );
+
+
+    context.drawImage(
+      video,
+      0,
+      0,
+      canvas.width,
+      canvas.height
+    );
+
+
+    const image =
+      context.getImageData(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+      );
+
+
+    const result =
+      jsQR(
+
+        image.data,
+
+        image.width,
+
+        image.height,
+
+        {
+          inversionAttempts:
+            "attemptBoth"
+        }
+
+      );
+
+
+    if (
+      result &&
+      result.data
+    ) {
+
+
+      document.getElementById(
+        "barcode"
+      ).value =
+        result.data;
+
+
+      showStatus(
+        "✓ QR-код считан",
+        "success"
+      );
+
+
+      stopScanner();
+
+
+      return;
+
+    }
+
+  }
+
+
+  timer =
+    setTimeout(
+      scanLoop,
+      120
+    );
+
 }
 
-function saveData(){
- const barcode=document.getElementById("barcode").value.trim();
- const quantity=Number(document.getElementById("quantity").value);
- if(!barcode){status("Сначала отсканируйте QR-код.","error");return}
- if(!Number.isFinite(quantity)||quantity<=0){status("Введите количество.","error");return}
 
- status("Сохраняю...","info");
- const iframe=document.createElement("iframe");
- iframe.name="save_"+Date.now(); iframe.style.display="none"; document.body.appendChild(iframe);
- const form=document.createElement("form");
- form.method="GET"; form.action=BACKEND_URL; form.target=iframe.name; form.style.display="none";
- for(const [name,value] of Object.entries({action:"save",barcode,quantity:String(quantity)})){
-   const i=document.createElement("input"); i.type="hidden"; i.name=name; i.value=value; form.appendChild(i);
- }
- document.body.appendChild(form); form.submit();
- setTimeout(()=>{
-   form.remove(); iframe.remove();
-   status("✓ Запись отправлена в Google Sheets","success");
-   document.getElementById("barcode").value="";
-   document.getElementById("quantity").value="1";
- },900);
+
+function stopScanner() {
+
+
+  scanning = false;
+
+
+  if (timer) {
+
+    clearTimeout(timer);
+
+  }
+
+
+  timer = null;
+
+
+  if (stream) {
+
+    stream
+      .getTracks()
+      .forEach(
+        function(track) {
+
+          track.stop();
+
+        }
+      );
+
+    stream = null;
+
+  }
+
+
+  document.getElementById(
+    "video"
+  ).srcObject = null;
+
+
+  document.getElementById(
+    "scanner"
+  ).style.display =
+    "none";
+
+
+  document.getElementById(
+    "start"
+  ).style.display =
+    "block";
+
+
+  document.getElementById(
+    "stop"
+  ).style.display =
+    "none";
+
 }
+
+
+
+function saveData() {
+
+
+  const barcode =
+    document.getElementById(
+      "barcode"
+    ).value.trim();
+
+
+  const quantity =
+    Number(
+      document.getElementById(
+        "quantity"
+      ).value
+    );
+
+
+  const button =
+    document.getElementById(
+      "save"
+    );
+
+
+  if (!barcode) {
+
+    showStatus(
+      "Сначала отсканируйте QR-код.",
+      "error"
+    );
+
+    return;
+
+  }
+
+
+  if (
+    !Number.isFinite(quantity) ||
+    quantity <= 0
+  ) {
+
+    showStatus(
+      "Введите количество.",
+      "error"
+    );
+
+    return;
+
+  }
+
+
+  button.disabled = true;
+
+  button.textContent =
+    "СОХРАНЕНИЕ...";
+
+
+  showStatus(
+    "Передаю запись в Google...",
+    "info"
+  );
+
+
+  const iframe =
+    document.createElement(
+      "iframe"
+    );
+
+
+  const frameName =
+    "save_" +
+    Date.now();
+
+
+  iframe.name =
+    frameName;
+
+
+  iframe.style.display =
+    "none";
+
+
+  document.body.appendChild(
+    iframe
+  );
+
+
+  const form =
+    document.createElement(
+      "form"
+    );
+
+
+  form.method =
+    "GET";
+
+
+  form.action =
+    BACKEND_URL;
+
+
+  form.target =
+    frameName;
+
+
+  form.style.display =
+    "none";
+
+
+  const fields = {
+
+    action: "save",
+
+    barcode: barcode,
+
+    quantity:
+      String(quantity)
+
+  };
+
+
+  Object.entries(fields)
+    .forEach(
+      function([name, value]) {
+
+
+        const input =
+          document.createElement(
+            "input"
+          );
+
+
+        input.type =
+          "hidden";
+
+
+        input.name =
+          name;
+
+
+        input.value =
+          value;
+
+
+        form.appendChild(
+          input
+        );
+
+
+      }
+    );
+
+
+  document.body.appendChild(
+    form
+  );
+
+
+  form.submit();
+
+
+  setTimeout(
+    function() {
+
+
+      form.remove();
+
+      iframe.remove();
+
+
+      button.disabled =
+        false;
+
+
+      button.textContent =
+        "СОХРАНИТЬ";
+
+
+      showStatus(
+        "✓ Запись передана в Google Sheets. Проверьте журнал.",
+        "success"
+      );
+
+
+      document.getElementById(
+        "barcode"
+      ).value = "";
+
+
+      document.getElementById(
+        "quantity"
+      ).value = "1";
+
+
+    },
+    1500
+  );
+
+}
+
+
 </script>
+
+
 </body>
+
 </html>
