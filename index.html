@@ -71,13 +71,11 @@ label {
   margin-bottom: 7px;
 }
 
-select,
-input {
+select {
   width: 100%;
   padding: 15px;
 
-  border:
-    1px solid #ccc;
+  border: 1px solid #ccc;
 
   border-radius: 10px;
 
@@ -93,13 +91,13 @@ button {
 
   border-radius: 12px;
 
-  padding: 16px;
+  padding: 15px;
 
-  font-size: 17px;
+  font-size: 16px;
 
   font-weight: 600;
 
-  margin-top: 12px;
+  margin-top: 10px;
 }
 
 .primary {
@@ -125,7 +123,12 @@ button {
 .machine-title {
   font-size: 23px;
   font-weight: 700;
-  margin-bottom: 18px;
+  margin-bottom: 8px;
+}
+
+.operator-info {
+  color: #777;
+  font-size: 14px;
 }
 
 .material-block {
@@ -143,34 +146,89 @@ button {
   font-weight: 700;
 }
 
+.status {
+  margin-top: 6px;
+
+  font-size: 14px;
+
+  font-weight: 700;
+}
+
+.status-installed {
+  color: #16821c;
+}
+
+.status-empty {
+  color: #777;
+}
+
 .material-value {
-  margin-top: 7px;
+  margin-top: 8px;
 
   word-break: break-all;
 
   color: #555;
+
+  font-size: 14px;
 }
 
-#workScreen {
+.shop-row {
+  display: flex;
+
+  align-items: center;
+
+  gap: 8px;
+
+  margin-top: 9px;
+}
+
+.shop-code {
+  flex: 1;
+
+  padding: 11px;
+
+  background: #f4f4f4;
+
+  border-radius: 9px;
+
+  word-break: break-all;
+
+  font-size: 14px;
+}
+
+.shop-row button {
+  width: auto;
+
+  margin: 0;
+
+  padding: 10px 12px;
+
+  font-size: 14px;
+}
+
+#scannerCard,
+#confirmBlock,
+#status {
   display: none;
 }
 
 #scanner {
-  display: none;
 
   position: relative;
-
-  margin-top: 15px;
 
   overflow: hidden;
 
   border-radius: 14px;
 
   background: #000;
+
+  margin-top: 12px;
 }
 
 #video {
+
   width: 100%;
+
   display: block;
 }
 
@@ -215,46 +273,43 @@ button {
   display: none;
 }
 
-#confirmBlock {
+#canvas {
   display: none;
-}
-
-#status {
-
-  display: none;
-
-  margin-top: 14px;
-
-  padding: 13px;
-
-  border-radius: 10px;
-
-  font-size: 16px;
-
-  word-break: break-word;
 }
 
 .success {
   background: #e9f7e9;
+
   color: #176b17;
+
+  padding: 13px;
+
+  border-radius: 10px;
 }
 
 .error {
   background: #fdecec;
+
   color: #a00000;
+
+  padding: 13px;
+
+  border-radius: 10px;
 }
 
 .info {
   background: #eef3f8;
-  color: #333;
-}
 
-canvas {
-  display: none;
+  color: #333;
+
+  padding: 13px;
+
+  border-radius: 10px;
 }
 
 .small {
   color: #777;
+
   font-size: 14px;
 }
 
@@ -275,17 +330,15 @@ canvas {
 
 
 <div class="subtitle">
-Z-стекеры — тестовая версия
+Z-стекеры
 </div>
 
 
-<!-- ========================= -->
-<!-- ВЫБОР ОПЕРАТОРА -->
-<!-- ========================= -->
+<!-- ============================= -->
+<!-- НАЧАЛО -->
+<!-- ============================= -->
 
-<div
-id="startScreen"
-class="card">
+<div id="startScreen" class="card">
 
 
 <label>
@@ -380,16 +433,16 @@ style="margin-top:12px;">
 </div>
 
 
-<!-- ========================= -->
+<!-- ============================= -->
 <!-- РАБОЧИЙ ЭКРАН -->
-<!-- ========================= -->
+<!-- ============================= -->
 
 <div
-id="workScreen">
+id="workScreen"
+style="display:none;">
 
 
 <div class="card">
-
 
 <div
 id="machineTitle"
@@ -399,18 +452,19 @@ Z-СТЕКЕР
 
 </div>
 
-
 <div
 id="operatorInfo"
-class="small">
+class="operator-info">
+
+</div>
 
 </div>
 
 
-</div>
 
-
+<!-- ============================= -->
 <!-- КЛЕЙ -->
+<!-- ============================= -->
 
 <div class="card">
 
@@ -424,10 +478,19 @@ class="small">
 
 
 <div
+id="glueStatus"
+class="status status-empty">
+
+⚪ НЕ УСТАНОВЛЕН
+
+</div>
+
+
+<div
 id="glueValue"
 class="material-value">
 
-Не установлен
+—
 
 </div>
 
@@ -444,41 +507,95 @@ onclick="startGlueScan()">
 </div>
 
 
-<!-- СЕПАРАТОР ПОКА НЕ АКТИВЕН -->
+
+<!-- ============================= -->
+<!-- СЕПАРАТОР -->
+<!-- ============================= -->
 
 <div class="material-block">
+
 
 <div class="material-name">
 СЕПАРАТОР
 </div>
 
-<div class="material-value">
-Будет добавлен следующим этапом
-</div>
+
+<div
+id="separatorStatus"
+class="status status-empty">
+
+⚪ НЕ УСТАНОВЛЕН
 
 </div>
 
 
-<!-- МАГАЗИНЫ ПОКА НЕ АКТИВНЫ -->
+<div
+id="separatorValue"
+class="material-value">
+
+—
+
+</div>
+
+
+<button
+class="blue"
+onclick="startSeparatorScan()">
+
+ЗАМЕНИТЬ СЕПАРАТОР
+
+</button>
+
+
+</div>
+
+
+
+<!-- ============================= -->
+<!-- МАГАЗИНЫ -->
+<!-- ============================= -->
 
 <div class="material-block">
+
 
 <div class="material-name">
 МАГАЗИНЫ ЭЛЕКТРОДОВ
 </div>
 
-<div class="material-value">
-Будут добавлены следующим этапом
-</div>
+
+<div
+id="shopsStatus"
+class="status status-empty">
+
+⚪ НЕ УСТАНОВЛЕНЫ
 
 </div>
+
+
+<div id="shopsContainer">
+
+</div>
+
+
+<button
+id="addShopButton"
+class="blue"
+onclick="startShopScan()">
+
+＋ ДОБАВИТЬ МАГАЗИН
+
+</button>
+
+
+</div>
+
 
 
 <button
 class="gray"
 onclick="changeMachine()">
 
-📷 СКАНИРОВАТЬ / ВЫБРАТЬ ДРУГУЮ МАШИНУ
+ВЫБРАТЬ ДРУГУЮ МАШИНУ
 
 </button>
 
@@ -489,14 +606,14 @@ onclick="changeMachine()">
 </div>
 
 
-<!-- ========================= -->
+
+<!-- ============================= -->
 <!-- СКАНЕР -->
-<!-- ========================= -->
+<!-- ============================= -->
 
 <div
 id="scannerCard"
-class="card"
-style="display:none;">
+class="card">
 
 
 <div
@@ -519,13 +636,12 @@ playsinline>
 </video>
 
 
-<div class="frame">
-</div>
+<div class="frame"></div>
 
 
 <div class="hint">
 
-Наведите QR-код в рамку
+Наведите код в рамку
 
 </div>
 
@@ -543,16 +659,16 @@ onclick="stopScanner()">
 </button>
 
 
-<canvas id="canvas">
-</canvas>
+<canvas id="canvas"></canvas>
 
 
 </div>
 
 
-<!-- ========================= -->
+
+<!-- ============================= -->
 <!-- ПОДТВЕРЖДЕНИЕ -->
-<!-- ========================= -->
+<!-- ============================= -->
 
 <div
 id="confirmBlock"
@@ -575,7 +691,7 @@ class="material-value">
 
 <button
 class="blue"
-onclick="confirmGlue()">
+onclick="confirmOperation()">
 
 ПОДТВЕРДИТЬ И СОХРАНИТЬ
 
@@ -594,20 +710,20 @@ onclick="cancelOperation()">
 </div>
 
 
-<div
-id="status">
-</div>
+
+<div id="status"></div>
 
 
 </div>
+
 
 
 <script>
 
 
-/* ==========================================
+/* =========================================
    НАСТРОЙКИ
-========================================== */
+========================================= */
 
 
 const BACKEND_URL =
@@ -626,39 +742,44 @@ let currentMachineId = "";
 
 let currentMachineName = "";
 
-let scannedGlue = "";
+let currentOperation = "";
+
+let scannedCode = "";
 
 
 
-/* ==========================================
+/* =========================================
    СТАТУС
-========================================== */
+========================================= */
 
 
 function showStatus(message, type) {
 
-  const element =
+  const el =
     document.getElementById("status");
 
-  element.style.display =
-    "block";
+  el.style.display = "block";
 
-  element.className = "";
+  el.className = type || "info";
 
-  element.classList.add(
-    type || "info"
-  );
+  el.textContent = message;
 
-  element.textContent =
-    message;
+}
+
+
+function hideStatus() {
+
+  document.getElementById(
+    "status"
+  ).style.display = "none";
 
 }
 
 
 
-/* ==========================================
+/* =========================================
    ОТКРЫТИЕ МАШИНЫ
-========================================== */
+========================================= */
 
 
 function openMachine() {
@@ -670,14 +791,14 @@ function openMachine() {
     ).value;
 
 
-  const machine =
+  const machineSelect =
     document.getElementById(
       "machine"
     );
 
 
   const machineId =
-    machine.value;
+    machineSelect.value;
 
 
   if (!operator) {
@@ -713,8 +834,8 @@ function openMachine() {
 
 
   currentMachineName =
-    machine.options[
-      machine.selectedIndex
+    machineSelect.options[
+      machineSelect.selectedIndex
     ].dataset.name;
 
 
@@ -750,16 +871,16 @@ function openMachine() {
 
 
 
-/* ==========================================
-   ПОЛУЧЕНИЕ ТЕКУЩЕГО СОСТОЯНИЯ
-========================================== */
+/* =========================================
+   ПОЛУЧЕНИЕ СОСТОЯНИЯ
+========================================= */
 
 
 function loadState() {
 
 
   showStatus(
-    "Загрузка состояния машины...",
+    "Загрузка состояния...",
     "info"
   );
 
@@ -802,11 +923,23 @@ function loadState() {
           JSON.parse(text);
 
 
-        document.getElementById(
-          "glueValue"
-        ).textContent =
-          data.glue ||
-          "Не установлен";
+        updateGlue(
+          data.glue || ""
+        );
+
+
+        updateSeparator(
+          data.separator || ""
+        );
+
+
+        updateShops(
+
+          data.shop1 || "",
+
+          data.shop2 || ""
+
+        );
 
 
         hideStatus();
@@ -816,7 +949,7 @@ function loadState() {
       catch(error) {
 
         showStatus(
-          "Не удалось получить состояние машины.",
+          "Ошибка обработки состояния машины.",
           "error"
         );
 
@@ -837,15 +970,271 @@ function loadState() {
 
 
 
-/* ==========================================
-   СКАНИРОВАНИЕ КЛЕЯ
-========================================== */
+/* =========================================
+   ОБНОВЛЕНИЕ КЛЕЯ
+========================================= */
 
 
-function startGlueScan() {
+function updateGlue(code) {
 
 
-  scannedGlue = "";
+  const status =
+    document.getElementById(
+      "glueStatus"
+    );
+
+
+  const value =
+    document.getElementById(
+      "glueValue"
+    );
+
+
+  if (code) {
+
+    status.textContent =
+      "🟢 УСТАНОВЛЕН";
+
+    status.className =
+      "status status-installed";
+
+    value.textContent =
+      code;
+
+  }
+
+  else {
+
+    status.textContent =
+      "⚪ НЕ УСТАНОВЛЕН";
+
+    status.className =
+      "status status-empty";
+
+    value.textContent =
+      "—";
+
+  }
+
+}
+
+
+
+/* =========================================
+   ОБНОВЛЕНИЕ СЕПАРАТОРА
+========================================= */
+
+
+function updateSeparator(code) {
+
+
+  const status =
+    document.getElementById(
+      "separatorStatus"
+    );
+
+
+  const value =
+    document.getElementById(
+      "separatorValue"
+    );
+
+
+  if (code) {
+
+    status.textContent =
+      "🟢 УСТАНОВЛЕН";
+
+    status.className =
+      "status status-installed";
+
+    value.textContent =
+      code;
+
+  }
+
+  else {
+
+    status.textContent =
+      "⚪ НЕ УСТАНОВЛЕН";
+
+    status.className =
+      "status status-empty";
+
+    value.textContent =
+      "—";
+
+  }
+
+}
+
+
+
+/* =========================================
+   ОБНОВЛЕНИЕ МАГАЗИНОВ
+========================================= */
+
+
+function updateShops(
+  shop1,
+  shop2
+) {
+
+
+  const container =
+    document.getElementById(
+      "shopsContainer"
+    );
+
+
+  const status =
+    document.getElementById(
+      "shopsStatus"
+    );
+
+
+  const addButton =
+    document.getElementById(
+      "addShopButton"
+    );
+
+
+  container.innerHTML = "";
+
+
+  const shops = [];
+
+
+  if (shop1) {
+    shops.push(shop1);
+  }
+
+
+  if (shop2) {
+    shops.push(shop2);
+  }
+
+
+  if (shops.length === 0) {
+
+
+    status.textContent =
+      "⚪ НЕ УСТАНОВЛЕНЫ";
+
+    status.className =
+      "status status-empty";
+
+
+  }
+
+  else {
+
+
+    status.textContent =
+      "🟢 УСТАНОВЛЕНЫ: " +
+      shops.length;
+
+    status.className =
+      "status status-installed";
+
+
+    shops.forEach(
+      function(shop) {
+
+
+        const row =
+          document.createElement(
+            "div"
+          );
+
+
+        row.className =
+          "shop-row";
+
+
+        const code =
+          document.createElement(
+            "div"
+          );
+
+
+        code.className =
+          "shop-code";
+
+
+        code.textContent =
+          shop;
+
+
+        const button =
+          document.createElement(
+            "button"
+          );
+
+
+        button.className =
+          "danger";
+
+
+        button.textContent =
+          "СНЯТЬ";
+
+
+        button.onclick =
+          function() {
+
+            removeShop(shop);
+
+          };
+
+
+        row.appendChild(code);
+
+        row.appendChild(button);
+
+        container.appendChild(row);
+
+      }
+
+    );
+
+  }
+
+
+  if (shops.length >= 2) {
+
+    addButton.style.display =
+      "none";
+
+  }
+
+  else {
+
+    addButton.style.display =
+      "block";
+
+  }
+
+}
+
+
+
+/* =========================================
+   ЗАПУСК СКАНЕРА
+========================================= */
+
+
+function startScan(
+  operation,
+  title
+) {
+
+
+  currentOperation =
+    operation;
+
+
+  scannedCode = "";
 
 
   document.getElementById(
@@ -857,7 +1246,13 @@ function startGlueScan() {
   document.getElementById(
     "scanTitle"
   ).textContent =
-    "СКАНИРУЙТЕ КЛЕЙ";
+    title;
+
+
+  document.getElementById(
+    "confirmBlock"
+  ).style.display =
+    "none";
 
 
   startScanner();
@@ -866,9 +1261,45 @@ function startGlueScan() {
 
 
 
-/* ==========================================
+/* =========================================
+   КНОПКИ СКАНИРОВАНИЯ
+========================================= */
+
+
+function startGlueScan() {
+
+  startScan(
+    "Замена клея",
+    "СКАНИРУЙТЕ КЛЕЙ"
+  );
+
+}
+
+
+function startSeparatorScan() {
+
+  startScan(
+    "Замена сепаратора",
+    "СКАНИРУЙТЕ СЕПАРАТОР"
+  );
+
+}
+
+
+function startShopScan() {
+
+  startScan(
+    "Установка магазина",
+    "СКАНИРУЙТЕ МАГАЗИН"
+  );
+
+}
+
+
+
+/* =========================================
    КАМЕРА
-========================================== */
+========================================= */
 
 
 async function startScanner() {
@@ -954,7 +1385,7 @@ async function startScanner() {
 
 
     showStatus(
-      "Камера работает. Ищу QR-код...",
+      "Камера работает. Ищу код...",
       "info"
     );
 
@@ -963,7 +1394,6 @@ async function startScanner() {
 
 
   }
-
 
   catch(error) {
 
@@ -986,9 +1416,9 @@ async function startScanner() {
 
 
 
-/* ==========================================
-   ПОИСК QR
-========================================== */
+/* =========================================
+   ЦИКЛ СКАНИРОВАНИЯ
+========================================= */
 
 
 function scanLoop() {
@@ -1076,14 +1506,14 @@ function scanLoop() {
     ) {
 
 
-      scannedGlue =
+      scannedCode =
         result.data;
 
 
       stopScanner();
 
 
-      showGlueConfirmation();
+      showConfirmation();
 
 
       return;
@@ -1103,9 +1533,9 @@ function scanLoop() {
 
 
 
-/* ==========================================
+/* =========================================
    ОСТАНОВКА КАМЕРЫ
-========================================== */
+========================================= */
 
 
 function stopScanner() {
@@ -1141,9 +1571,13 @@ function stopScanner() {
   }
 
 
-  document.getElementById(
-    "video"
-  ).srcObject = null;
+  const video =
+    document.getElementById(
+      "video"
+    );
+
+
+  video.srcObject = null;
 
 
   document.getElementById(
@@ -1161,12 +1595,16 @@ function stopScanner() {
 
 
 
-/* ==========================================
-   ПОДТВЕРЖДЕНИЕ КЛЕЯ
-========================================== */
+/* =========================================
+   ПОДТВЕРЖДЕНИЕ
+========================================= */
 
 
-function showGlueConfirmation() {
+function showConfirmation() {
+
+
+  const type =
+    currentOperation;
 
 
   document.getElementById(
@@ -1180,27 +1618,38 @@ function showGlueConfirmation() {
   ).innerHTML =
 
     "<b>Машина:</b> " +
-    currentMachineName +
+
+    escapeHtml(
+      currentMachineName
+    ) +
 
     "<br><br>" +
 
     "<b>Оператор:</b> " +
-    currentOperator +
+
+    escapeHtml(
+      currentOperator
+    ) +
 
     "<br><br>" +
 
-    "<b>Материал:</b> Клей" +
+    "<b>Операция:</b> " +
+
+    escapeHtml(
+      type
+    ) +
 
     "<br><br>" +
 
     "<b>Код:</b> " +
+
     escapeHtml(
-      scannedGlue
+      scannedCode
     );
 
 
   showStatus(
-    "QR-код считан. Проверьте данные.",
+    "Код считан. Проверьте данные.",
     "info"
   );
 
@@ -1208,18 +1657,18 @@ function showGlueConfirmation() {
 
 
 
-/* ==========================================
-   СОХРАНЕНИЕ КЛЕЯ
-========================================== */
+/* =========================================
+   СОХРАНЕНИЕ ОПЕРАЦИИ
+========================================= */
 
 
-function confirmGlue() {
+function confirmOperation() {
 
 
-  if (!scannedGlue) {
+  if (!scannedCode) {
 
     showStatus(
-      "Код клея отсутствует.",
+      "Код не найден.",
       "error"
     );
 
@@ -1235,6 +1684,7 @@ function confirmGlue() {
 
 
   const url =
+
     BACKEND_URL +
 
     "?action=save" +
@@ -1256,22 +1706,22 @@ function confirmGlue() {
 
     "&operation=" +
     encodeURIComponent(
-      "Замена клея"
+      currentOperation
     ) +
 
     "&materialType=" +
     encodeURIComponent(
-      "Клей"
+      getMaterialType()
     ) +
 
     "&materialCode=" +
     encodeURIComponent(
-      scannedGlue
+      scannedCode
     ) +
 
     "&batch=" +
     encodeURIComponent(
-      scannedGlue
+      scannedCode
     );
 
 
@@ -1304,17 +1754,25 @@ function confirmGlue() {
         "none";
 
 
-      scannedGlue = "";
+      document.getElementById(
+        "scannerCard"
+      ).style.display =
+        "none";
 
 
       showStatus(
-        "✓ Клей успешно заменён.",
+        "✓ Операция успешно сохранена.",
         "success"
       );
 
 
-      loadState();
+      scannedCode = "";
 
+
+      currentOperation = "";
+
+
+      loadState();
 
     })
 
@@ -1331,21 +1789,187 @@ function confirmGlue() {
 
 
 
-/* ==========================================
+/* =========================================
+   ТИП МАТЕРИАЛА
+========================================= */
+
+
+function getMaterialType() {
+
+
+  if (
+    currentOperation ===
+    "Замена клея"
+  ) {
+
+    return "Клей";
+
+  }
+
+
+  if (
+    currentOperation ===
+    "Замена сепаратора"
+  ) {
+
+    return "Сепаратор";
+
+  }
+
+
+  if (
+    currentOperation ===
+    "Установка магазина"
+  ) {
+
+    return "Магазин электродов";
+
+  }
+
+
+  return "";
+
+}
+
+
+
+/* =========================================
+   СНЯТИЕ МАГАЗИНА
+========================================= */
+
+
+function removeShop(shopCode) {
+
+
+  const ok =
+    confirm(
+      "Снять магазин " +
+      shopCode +
+      "?"
+    );
+
+
+  if (!ok) {
+    return;
+  }
+
+
+  currentOperation =
+    "Снятие магазина";
+
+
+  scannedCode =
+    shopCode;
+
+
+  showStatus(
+    "Снимаем магазин...",
+    "info"
+  );
+
+
+  const url =
+
+    BACKEND_URL +
+
+    "?action=save" +
+
+    "&operator=" +
+    encodeURIComponent(
+      currentOperator
+    ) +
+
+    "&machineId=" +
+    encodeURIComponent(
+      currentMachineId
+    ) +
+
+    "&machine=" +
+    encodeURIComponent(
+      currentMachineName
+    ) +
+
+    "&operation=" +
+    encodeURIComponent(
+      "Снятие магазина"
+    ) +
+
+    "&materialType=" +
+    encodeURIComponent(
+      "Магазин электродов"
+    ) +
+
+    "&materialCode=" +
+    encodeURIComponent(
+      shopCode
+    ) +
+
+    "&batch=" +
+    encodeURIComponent(
+      shopCode
+    );
+
+
+  fetch(url)
+
+    .then(response =>
+      response.text()
+    )
+
+    .then(text => {
+
+
+      if (
+        text.startsWith("ERROR|")
+      ) {
+
+        showStatus(
+          text.substring(6),
+          "error"
+        );
+
+        return;
+
+      }
+
+
+      showStatus(
+        "✓ Магазин снят.",
+        "success"
+      );
+
+
+      loadState();
+
+    })
+
+    .catch(error => {
+
+      showStatus(
+        "Ошибка передачи данных.",
+        "error"
+      );
+
+    });
+
+}
+
+
+
+/* =========================================
    ОТМЕНА
-========================================== */
+========================================= */
 
 
 function cancelOperation() {
 
 
-  scannedGlue = "";
+  scannedCode = "";
+
+  currentOperation = "";
 
 
-  document.getElementById(
-    "confirmBlock"
-  ).style.display =
-    "none";
+  stopScanner();
 
 
   document.getElementById(
@@ -1354,7 +1978,10 @@ function cancelOperation() {
     "none";
 
 
-  stopScanner();
+  document.getElementById(
+    "confirmBlock"
+  ).style.display =
+    "none";
 
 
   showStatus(
@@ -1366,9 +1993,9 @@ function cancelOperation() {
 
 
 
-/* ==========================================
-   СМЕНА МАШИНЫ
-========================================== */
+/* =========================================
+   ДРУГАЯ МАШИНА
+========================================= */
 
 
 function changeMachine() {
@@ -1407,25 +2034,9 @@ function changeMachine() {
 
 
 
-/* ==========================================
-   СКРЫТЬ СТАТУС
-========================================== */
-
-
-function hideStatus() {
-
-  document.getElementById(
-    "status"
-  ).style.display =
-    "none";
-
-}
-
-
-
-/* ==========================================
+/* =========================================
    ЗАЩИТА HTML
-========================================== */
+========================================= */
 
 
 function escapeHtml(text) {
