@@ -61,7 +61,7 @@ canvas{display:none}
 
 <body>
 <div class="app">
-<div style="text-align:center;font-size:12px;color:#777;margin:0 0 10px">ТЕСТ СКАНЕРА • v3 • ИНВЕРСИЯ 1D</div>
+<div style="text-align:center;font-size:12px;color:#777;margin:0 0 10px">ТЕСТ СКАНЕРА • v4 • 1D + QR</div>
 
 <h1>ТЕСТ СКАНЕРА</h1>
 <div class="subtitle">QR + 1D штрихкоды + Data Matrix</div>
@@ -183,13 +183,13 @@ function escapeHtml(s){
 
 async function startScanner(){
   try{
-    if(!window.ZXingBrowser){
-      setCameraStatus("Библиотека сканера не загрузилась.", "error");
-      return;
+    if(!window.ZXingBrowser || !window.ZXingBrowser.BrowserMultiFormatReader){
+      throw new Error("ZXingBrowser не загрузился");
     }
 
     await stopScanner();
 
+    // ZXing documents decodeFromVideoDevice as the standard webcam API.
     reader = new ZXingBrowser.BrowserMultiFormatReader();
 
     scanner.style.display = "block";
@@ -200,21 +200,27 @@ async function startScanner(){
       "Камера запускается. Ищу QR, Data Matrix и 1D штрихкод...",
       "info"
     );
-    setDiagnostic("Камера запущена. Проверяю разные типы кодов...", "info");
+    setDiagnostic("v4: запускаю BrowserMultiFormatReader...", "info");
+
+    const devices = await ZXingBrowser.BrowserCodeReader.listVideoInputDevices();
+
+    if(!devices || !devices.length){
+      throw new Error("Камера не найдена");
+    }
+
+    // Prefer the rear camera on phones.
+    let selected = devices.find(d =>
+      /back|rear|environment|зад/i.test(d.label || "")
+    ) || devices[devices.length - 1];
+
+    const deviceId = selected.deviceId;
 
     startedAt = performance.now();
 
-    controls = await reader.decodeFromConstraints(
-      {
-        audio:false,
-        video:{
-          facingMode:{ideal:"environment"},
-          width:{ideal:1920},
-          height:{ideal:1080}
-        }
-      },
+    controls = await reader.decodeFromVideoDevice(
+      deviceId,
       video,
-      (result, error) => {
+      (result, error, controlsFromCallback) => {
 
         if(result){
           const text = result.getText();
@@ -230,28 +236,48 @@ async function startScanner(){
             showResult(text, format, elapsed);
             addHistory(text, format);
 
-            setCameraStatus(
-              "✓ КОД СЧИТАН",
+            setCameraStatus("✓ КОД СЧИТАН", "success");
+            setDiagnostic(
+              "v4: код распознан. Формат: " + format,
               "success"
             );
-            setDiagnostic("Камера: код распознан.", "success");
 
             if(navigator.vibrate){
               navigator.vibrate(120);
             }
 
-            stopScanner();
+            // Stop only the returned controls; don't call reader.reset().
+            try{
+              if(controlsFromCallback && controlsFromCallback.stop){
+                controlsFromCallback.stop();
+              }else if(controls && controls.stop){
+                controls.stop();
+              }
+            }catch(e){}
+
+            controls = null;
+
+            if(video.srcObject){
+              video.srcObject.getTracks().forEach(t => t.stop());
+              video.srcObject = null;
+            }
+
+            scanner.style.display = "none";
+            startBtn.style.display = "block";
+            stopBtn.style.display = "none";
           }
         }
       }
     );
 
-    if(video.readyState >= 2){
-      setCameraStatus(
-        "Камера работает. Наведите код в рамку.",
-        "info"
-      );
-    }
+    setCameraStatus(
+      "Камера работает. Наведите код в рамку.",
+      "info"
+    );
+    setDiagnostic(
+      "v4: камера работает. Проверяю QR и 1D штрихкоды.",
+      "info"
+    );
 
   }catch(error){
     await stopScanner();
@@ -261,24 +287,22 @@ async function startScanner(){
       (error.name || error.message || "неизвестная ошибка"),
       "error"
     );
+
+    setDiagnostic(
+      "v4: " + (error.stack || error.message || error),
+      "error"
+    );
   }
 }
 
 async function stopScanner(){
   try{
-    if(controls){
+    if(controls && controls.stop){
       controls.stop();
-      controls = null;
     }
   }catch(e){}
 
-  try{
-    if(reader && reader.reset){
-      reader.reset();
-    }
-  }catch(e){}
-
-  reader = null;
+  controls = null;
 
   if(video.srcObject){
     video.srcObject.getTracks().forEach(t => t.stop());
@@ -289,6 +313,7 @@ async function stopScanner(){
   startBtn.style.display = "block";
   stopBtn.style.display = "none";
 }
+
 
 startBtn.addEventListener("click", startScanner);
 stopBtn.addEventListener("click", async () => {
@@ -446,7 +471,7 @@ document.getElementById("photo").addEventListener("change", async function(){
         setDiagnostic("Фото: не найден ни один поддерживаемый код.", "error");
 
       }catch(e){
-        photoStatus.textContent = "Ошибка анализа фотографии.";
+        photoStatus.textContent = "Ошибка анализа фотографии: " + (e && e.message ? e.message : e);
         photoStatus.className = "status error";
         setDiagnostic("Ошибка анализа фото: " + (e.message || e), "error");
       }finally{
