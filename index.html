@@ -4,29 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#222">
-<title>Учёт материалов — WORK v6 · SCANNER v8</title>
-<script src="https://unpkg.com/@zxing/browser@0.1.5/umd/zxing-browser.min.js">
-function getMoscowTimestamp(){
-  const now = new Date();
-  const parts = new Intl.DateTimeFormat("ru-RU", {
-    timeZone: "Europe/Moscow",
-    year: "numeric", month: "2-digit", day: "2-digit",
-    hour: "2-digit", minute: "2-digit", second: "2-digit",
-    hour12: false
-  }).formatToParts(now);
-  const v = {};
-  parts.forEach(p => { if(p.type !== "literal") v[p.type] = p.value; });
-  return `${v.year}-${v.month}-${v.day}T${v.hour}:${v.minute}:${v.second}+03:00`;
-}
-function getMoscowDateTimeDisplay(){
-  return new Intl.DateTimeFormat("ru-RU", {
-    timeZone: "Europe/Moscow",
-    year: "numeric", month: "2-digit", day: "2-digit",
-    hour: "2-digit", minute: "2-digit", second: "2-digit",
-    hour12: false
-  }).format(new Date());
-}
-</script>
+<title>Учёт материалов — WORK v7 · SCANNER v8</title>
+<script src="https://unpkg.com/@zxing/browser@0.1.5/umd/zxing-browser.min.js"></script>
 <style>
 *{box-sizing:border-box}
 body{margin:0;padding:18px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:#f4f4f4;color:#222}
@@ -139,7 +118,7 @@ button{width:100%;border:0;border-radius:12px;padding:15px;font-size:16px;font-w
 <div class="app">
 <h1>УЧЁТ МАТЕРИАЛОВ</h1>
 <div class="subtitle">Z-стекеры</div>
-<div style="text-align:center;font-size:12px;color:#777;margin-top:6px">WORK v6 · SCANNER v8</div>
+<div style="text-align:center;font-size:12px;color:#777;margin-top:6px">WORK v7 · SCANNER v8</div><div style="text-align:center;font-size:11px;color:#888;margin-top:3px">Время операций: Москва (UTC+3)</div>
 <div id="connectionStatus" class="connection online">🟢 ОНЛАЙН</div>
 
 <div id="startScreen" class="card">
@@ -226,6 +205,27 @@ button{width:100%;border:0;border-radius:12px;padding:15px;font-size:16px;font-w
 </div>
 
 <script>
+
+function getMoscowTimestamp(){
+  const now = new Date();
+  const parts = new Intl.DateTimeFormat("ru-RU", {
+    timeZone: "Europe/Moscow",
+    year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit", second: "2-digit",
+    hour12: false
+  }).formatToParts(now);
+  const v = {};
+  parts.forEach(p => { if(p.type !== "literal") v[p.type] = p.value; });
+  return `${v.year}-${v.month}-${v.day}T${v.hour}:${v.minute}:${v.second}+03:00`;
+}
+function getMoscowDateTimeDisplay(){
+  return new Intl.DateTimeFormat("ru-RU", {
+    timeZone: "Europe/Moscow",
+    year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit", second: "2-digit",
+    hour12: false
+  }).format(new Date());
+}
 const BACKEND_URL="https://script.google.com/macros/s/AKfycbxoJXLeVPG3Yiqx6tTovtkONlXNfPwXgqJyrAcCDf_gSksrzTHSifwKZkIJkH7_s99O-g/exec";
 const QUEUE_KEY="zstacker_pending_operations_v2";
 const STATE_PREFIX="zstacker_state_v2_";
