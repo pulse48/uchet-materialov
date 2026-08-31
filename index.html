@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#222">
-<title>Учёт материалов — WORK v3 · SCANNER v8</title>
+<title>Учёт материалов — WORK v4 · SCANNER v8</title>
 <script src="https://unpkg.com/@zxing/browser@0.1.5/umd/zxing-browser.min.js"></script>
 <style>
 *{box-sizing:border-box}
@@ -69,13 +69,41 @@ button{width:100%;border:0;border-radius:12px;padding:15px;font-size:16px;font-w
   flex-direction:column;
 }
 
+
+/* WORK v4: верхняя зона рабочего экрана */
+#topWorkZone{
+  display:flex;
+  flex-direction:column;
+  width:100%;
+  margin-bottom:15px;
+}
+#topWorkZone #status{
+  position:sticky;
+  top:8px;
+  z-index:200;
+  margin:0 0 10px;
+  box-shadow:0 2px 8px rgba(0,0,0,.08);
+}
+#topWorkZone #scannerCard{
+  margin:0 0 10px;
+}
+#topWorkZone #scannerCard #scanner{
+  margin-top:10px;
+}
+#topWorkZone #scannerCard .scan-top-status{
+  display:block;
+  font-size:16px;
+  font-weight:700;
+  margin-bottom:8px;
+}
+
 </style>
 </head>
 <body>
 <div class="app">
 <h1>УЧЁТ МАТЕРИАЛОВ</h1>
-<div class="subtitle">Z-стекеры</div>
-<div style="text-align:center;font-size:12px;color:#777;margin:-4px 0 12px">WORK v3 · SCANNER v8</div>
+<div class="subtitle">Z-стекеры</div><div style="text-align:center;font-size:12px;color:#777;margin-top:6px">WORK v4 · SCANNER v8</div>
+<div style="text-align:center;font-size:12px;color:#777;margin:-4px 0 12px">WORK v4 · SCANNER v8</div>
 <div id="connectionStatus" class="connection online">🟢 ОНЛАЙН</div>
 
 <div id="startScreen" class="card">
@@ -101,6 +129,20 @@ button{width:100%;border:0;border-radius:12px;padding:15px;font-size:16px;font-w
 </div>
 
 <div id="workScreen" style="display:none">
+<div id="topWorkZone">
+  <div id="statusSlot"><div id="status"></div></div>
+  <div id="scannerCard" class="card">
+<div id="scanTitle" class="machine-title">СКАНИРОВАНИЕ КОДА</div>
+<div id="scanner">
+<video id="video" autoplay muted playsinline></video>
+<div class="frame"></div>
+<div class="hint">Наведите QR или штрихкод в рамку</div>
+</div>
+<button id="stopScan" class="gray" onclick="stopScanner()">ОСТАНОВИТЬ КАМЕРУ</button>
+<canvas id="canvas"></canvas>
+</div>
+</div>
+
 <div class="card">
 <div id="machineTitle" class="machine-title">Z-СТЕКЕР</div>
 <div id="operatorInfo" class="operator-info"></div>
@@ -134,16 +176,7 @@ button{width:100%;border:0;border-radius:12px;padding:15px;font-size:16px;font-w
 </div>
 </div>
 
-<div id="scannerCard" class="card">
-<div id="scanTitle" class="machine-title">СКАНИРОВАНИЕ КОДА</div>
-<div id="scanner">
-<video id="video" autoplay muted playsinline></video>
-<div class="frame"></div>
-<div class="hint">Наведите QR или штрихкод в рамку</div>
-</div>
-<button id="stopScan" class="gray" onclick="stopScanner()">ОСТАНОВИТЬ КАМЕРУ</button>
-<canvas id="canvas"></canvas>
-</div>
+
 
 <div id="confirmBlock" class="card">
 <div id="confirmTopStatus" class="scan-top-status"></div>
@@ -152,7 +185,7 @@ button{width:100%;border:0;border-radius:12px;padding:15px;font-size:16px;font-w
 <button class="blue" onclick="confirmOperation()">ПОДТВЕРДИТЬ И СОХРАНИТЬ</button>
 <button class="gray" onclick="cancelOperation()">ОТМЕНА</button>
 </div>
-<div id="status"></div>
+
 </div>
 
 <script>
