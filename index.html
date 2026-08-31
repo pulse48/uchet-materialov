@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#222">
-<title>Учёт материалов — WORK v4 · SCANNER v8</title>
+<title>Учёт материалов — WORK v5 · SCANNER v8</title>
 <script src="https://unpkg.com/@zxing/browser@0.1.5/umd/zxing-browser.min.js"></script>
 <style>
 *{box-sizing:border-box}
@@ -97,13 +97,28 @@ button{width:100%;border:0;border-radius:12px;padding:15px;font-size:16px;font-w
   margin-bottom:8px;
 }
 
+
+/* WORK v5: confirmation immediately below scanner */
+#topWorkZone #confirmBlock{
+  order:3;
+  margin:0 0 12px;
+}
+#topWorkZone #confirmBlock .machine-title{
+  margin-bottom:10px;
+}
+#topWorkZone #confirmTopStatus{
+  font-size:16px;
+  font-weight:700;
+  margin-bottom:8px;
+}
+
 </style>
 </head>
 <body>
 <div class="app">
 <h1>УЧЁТ МАТЕРИАЛОВ</h1>
-<div class="subtitle">Z-стекеры</div><div style="text-align:center;font-size:12px;color:#777;margin-top:6px">WORK v4 · SCANNER v8</div>
-<div style="text-align:center;font-size:12px;color:#777;margin:-4px 0 12px">WORK v4 · SCANNER v8</div>
+<div class="subtitle">Z-стекеры</div>
+<div style="text-align:center;font-size:12px;color:#777;margin-top:6px">WORK v5 · SCANNER v8</div>
 <div id="connectionStatus" class="connection online">🟢 ОНЛАЙН</div>
 
 <div id="startScreen" class="card">
@@ -140,6 +155,13 @@ button{width:100%;border:0;border-radius:12px;padding:15px;font-size:16px;font-w
 </div>
 <button id="stopScan" class="gray" onclick="stopScanner()">ОСТАНОВИТЬ КАМЕРУ</button>
 <canvas id="canvas"></canvas>
+</div>
+<div id="confirmBlock" class="card">
+<div id="confirmTopStatus" class="scan-top-status"></div>
+<div class="machine-title">ПРОВЕРЬТЕ ДАННЫЕ</div>
+<div id="confirmData" class="material-value"></div>
+<button class="blue" onclick="confirmOperation()">ПОДТВЕРДИТЬ И СОХРАНИТЬ</button>
+<button class="gray" onclick="cancelOperation()">ОТМЕНА</button>
 </div>
 </div>
 
@@ -178,13 +200,7 @@ button{width:100%;border:0;border-radius:12px;padding:15px;font-size:16px;font-w
 
 
 
-<div id="confirmBlock" class="card">
-<div id="confirmTopStatus" class="scan-top-status"></div>
-<div class="machine-title">ПРОВЕРЬТЕ ДАННЫЕ</div>
-<div id="confirmData" class="material-value"></div>
-<button class="blue" onclick="confirmOperation()">ПОДТВЕРДИТЬ И СОХРАНИТЬ</button>
-<button class="gray" onclick="cancelOperation()">ОТМЕНА</button>
-</div>
+
 
 </div>
 
