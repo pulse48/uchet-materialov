@@ -61,7 +61,7 @@ canvas{display:none}
 
 <body>
 <div class="app">
-<div style="text-align:center;font-size:12px;color:#777;margin:0 0 10px">ТЕСТ СКАНЕРА • v7 • SPEED TEST</div>
+<div style="text-align:center;font-size:12px;color:#777;margin:0 0 10px">ТЕСТ СКАНЕРА • v8 • QR + 1D SPEED TEST</div>
 
 <h1>ТЕСТ СКАНЕРА</h1>
 <div class="subtitle">QR + 1D штрихкоды + Data Matrix</div>
@@ -85,6 +85,15 @@ canvas{display:none}
   <b>ДИАГНОСТИКА</b>
   <div id="diagnostic" class="status info" style="margin-top:10px">
     Готов к тесту.
+  </div>
+</div>
+
+<div class="card">
+  <b>ПРОТОКОЛ ТЕСТА</b>
+  <div class="small" style="margin-top:8px">
+    Проверь отдельно: клей → сепаратор → магазин.
+    Для каждого считывания фиксируем значение, тип и время в миллисекундах.
+    После каждого теста сделай фото экрана.
   </div>
 </div>
 
@@ -168,7 +177,7 @@ function addHistory(text, format){
   if(!text) return;
 
   const now = new Date().toLocaleTimeString("ru-RU");
-  history.unshift({text,format,time:now});
+  history.unshift({text,format,time:now,elapsed:window.lastScanElapsed || 0});
   history = history.slice(0,10);
 
   document.getElementById("historyList").innerHTML =
@@ -205,7 +214,7 @@ async function startScanner(){
     stopBtn.style.display = "block";
 
     setCameraStatus("Запрашиваю камеру...", "info");
-    setDiagnostic("v7: быстрый режим. Сначала анализирую узкую полосу без инверсии.", "info");
+    setDiagnostic("v8: комбинированный режим — весь кадр для QR/2D + полоса для 1D.", "info");
 
     stream = await navigator.mediaDevices.getUserMedia({
       audio:false,
@@ -226,14 +235,14 @@ async function startScanner(){
     cameraFrameNo = 0;
 
     setCameraStatus("Камера работает. Наведите код в рамку.", "info");
-    setDiagnostic("v7: быстрый поиск 1D/QR. Инверсия проверяется периодически.", "info");
+    setDiagnostic("v8: ищу QR/Data Matrix по всему кадру и Code 128 в горизонтальной полосе.", "info");
 
     cameraDecodeLoop();
 
   }catch(error){
     await stopScanner();
     setCameraStatus("Ошибка камеры: " + (error.name || error.message || "неизвестная ошибка"), "error");
-    setDiagnostic("v7: " + (error.stack || error.message || error), "error");
+    setDiagnostic("v8: " + (error.stack || error.message || error), "error");
   }
 }
 
@@ -259,7 +268,7 @@ async function cameraDecodeLoop(){
     const sourceCanvas = document.getElementById("canvas");
     const ctx = sourceCanvas.getContext("2d", {willReadFrequently:true});
 
-    // Moderate resolution: enough for the Code 128 but much faster than 1920x1080.
+    // Keep enough detail for QR but don't process 1920x1080.
     const maxW = 960;
     const scale = Math.min(1, maxW / vw);
     const w = Math.max(1, Math.round(vw * scale));
@@ -269,7 +278,21 @@ async function cameraDecodeLoop(){
     sourceCanvas.height = h;
     ctx.drawImage(video, 0, 0, w, h);
 
-    // For 1D barcodes, focus on the middle horizontal band.
+    // PATH A — whole frame for QR / Data Matrix.
+    // Try every second frame to keep the 1D path fast.
+    if(cameraFrameNo % 2 === 0){
+      const whole = await decodeCanvas(
+        sourceCanvas,
+        "весь кадр / QR-2D"
+      );
+
+      if(whole){
+        finishCameraResult(whole.text, whole.format);
+        return;
+      }
+    }
+
+    // PATH B — central horizontal band for Code 128 and other 1D.
     const strip = document.createElement("canvas");
     strip.width = w;
     strip.height = Math.max(100, Math.round(h * 0.22));
@@ -283,18 +306,17 @@ async function cameraDecodeLoop(){
       0, 0, w, strip.height
     );
 
-    // Fast path: normal image.
-    let found = await decodeDataUrlFast(
-      strip.toDataURL("image/jpeg", 0.82)
+    const oneD = await decodeCanvas(
+      strip,
+      "центральная полоса / 1D"
     );
 
-    if(found){
-      finishCameraResult(found.text, found.format);
+    if(oneD){
+      finishCameraResult(oneD.text, oneD.format);
       return;
     }
 
-    // Slow fallback only once every ~8 frames:
-    // invert the strip for white-on-black labels like MA02634.
+    // PATH C — inverted 1D only periodically.
     if(cameraFrameNo % 8 === 0){
       const image = sctx.getImageData(0,0,strip.width,strip.height);
 
@@ -304,6 +326,7 @@ async function cameraDecodeLoop(){
           0.587*image.data[i+1] +
           0.114*image.data[i+2]
         );
+
         image.data[i] = 255-y;
         image.data[i+1] = 255-y;
         image.data[i+2] = 255-y;
@@ -311,18 +334,22 @@ async function cameraDecodeLoop(){
 
       sctx.putImageData(image,0,0);
 
-      found = await decodeDataUrlFast(
-        strip.toDataURL("image/jpeg", 0.86)
+      const inverted = await decodeCanvas(
+        strip,
+        "центральная полоса / инверсия 1D"
       );
 
-      if(found){
-        finishCameraResult(found.text, found.format);
+      if(inverted){
+        finishCameraResult(inverted.text, inverted.format);
         return;
       }
     }
 
   }catch(e){
-    setDiagnostic("v7: ошибка обработки кадра — " + (e.message || e), "error");
+    setDiagnostic(
+      "v8: ошибка обработки кадра — " + (e.message || e),
+      "error"
+    );
   }finally{
     cameraDecodeBusy = false;
   }
@@ -332,12 +359,14 @@ async function cameraDecodeLoop(){
   }
 }
 
-async function decodeDataUrlFast(dataUrl){
+async function decodeCanvas(canvas, pathName){
   try{
+    const dataUrl = canvas.toDataURL("image/jpeg", 0.82);
     const result = await reader.decodeFromImageUrl(dataUrl);
 
     if(result){
       const text = result.getText();
+
       const rawFormat = result.getBarcodeFormat
         ? result.getBarcodeFormat()
         : "UNKNOWN";
@@ -346,7 +375,13 @@ async function decodeDataUrlFast(dataUrl){
         ? "CODE_128 (1D)"
         : String(rawFormat);
 
-      if(text) return {text, format};
+      if(text){
+        return {
+          text,
+          format,
+          pathName
+        };
+      }
     }
   }catch(e){}
 
@@ -359,17 +394,21 @@ function finishCameraResult(text, format){
   const elapsed = Math.round(performance.now() - startedAt);
 
   lastValue = text;
+  window.lastScanElapsed = elapsed;
   showResult(text, format, elapsed);
   addHistory(text, format);
 
   setCameraStatus("✓ КОД СЧИТАН", "success");
   setDiagnostic(
-    "v7: код распознан камерой. Формат: " + format +
-    ". Время: " + elapsed + " мс.",
+    "v8: код распознан камерой. Формат: " +
+    format + ". Время: " + elapsed + " мс.",
     "success"
   );
 
-  if(navigator.vibrate) navigator.vibrate(120);
+  if(navigator.vibrate){
+    navigator.vibrate(120);
+  }
+
   stopScanner();
 }
 
@@ -384,7 +423,9 @@ async function stopScanner(){
   cameraDecodeBusy = false;
 
   try{
-    if(reader && reader.reset) reader.reset();
+    if(reader && reader.reset){
+      reader.reset();
+    }
   }catch(e){}
 
   reader = null;
@@ -395,7 +436,9 @@ async function stopScanner(){
   }
 
   if(typeof stream !== "undefined" && stream){
-    try{ stream.getTracks().forEach(t => t.stop()); }catch(e){}
+    try{
+      stream.getTracks().forEach(t => t.stop());
+    }catch(e){}
     stream = null;
   }
 
