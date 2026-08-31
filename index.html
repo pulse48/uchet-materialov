@@ -61,7 +61,7 @@ canvas{display:none}
 
 <body>
 <div class="app">
-<div style="text-align:center;font-size:12px;color:#777;margin:0 0 10px">ТЕСТ СКАНЕРА • v5 • 1D + QR</div>
+<div style="text-align:center;font-size:12px;color:#777;margin:0 0 10px">ТЕСТ СКАНЕРА • v6 • КАМЕРА: КАДР + ОБРАБОТКА</div>
 
 <h1>ТЕСТ СКАНЕРА</h1>
 <div class="subtitle">QR + 1D штрихкоды + Data Matrix</div>
@@ -133,6 +133,7 @@ canvas{display:none}
 
 <script>
 let reader = null;
+let stream = null;
 let controls = null;
 let startedAt = 0;
 let lastValue = "";
@@ -196,128 +197,165 @@ async function startScanner(){
     }
 
     await stopScanner();
-
-    // ZXing documents decodeFromVideoDevice as the standard webcam API.
     reader = new ZXingBrowser.BrowserMultiFormatReader();
 
     scanner.style.display = "block";
     startBtn.style.display = "none";
     stopBtn.style.display = "block";
 
-    setCameraStatus(
-      "Камера запускается. Ищу QR, Data Matrix и 1D штрихкод...",
-      "info"
-    );
-    setDiagnostic("v4: запускаю BrowserMultiFormatReader...", "info");
+    setCameraStatus("Запрашиваю камеру...", "info");
+    setDiagnostic("v6: камера работает отдельно от декодера. Кадры передаются в ZXing.", "info");
 
-    const devices = await ZXingBrowser.BrowserCodeReader.listVideoInputDevices();
+    stream = await navigator.mediaDevices.getUserMedia({
+      audio:false,
+      video:{
+        facingMode:{ideal:"environment"},
+        width:{ideal:1920},
+        height:{ideal:1080}
+      }
+    });
 
-    if(!devices || !devices.length){
-      throw new Error("Камера не найдена");
-    }
-
-    // Prefer the rear camera on phones.
-    let selected = devices.find(d =>
-      /back|rear|environment|зад/i.test(d.label || "")
-    ) || devices[devices.length - 1];
-
-    const deviceId = selected.deviceId;
+    video.srcObject = stream;
+    video.setAttribute("playsinline","");
+    video.muted = true;
+    await video.play();
 
     startedAt = performance.now();
+    scanning = true;
 
-    controls = await reader.decodeFromVideoDevice(
-      deviceId,
-      video,
-      (result, error, controlsFromCallback) => {
+    setCameraStatus("Камера работает. Ищу QR и 1D штрихкод...", "info");
+    setDiagnostic("v6: анализирую кадры. Для 1D отдельно проверяю центральную полосу и инверсию.", "info");
 
-        if(result){
-          const text = result.getText();
-          const rawFormat = result.getBarcodeFormat
-            ? result.getBarcodeFormat()
-            : "UNKNOWN";
-          const format = rawFormat === 4
-            ? "CODE_128 (1D)"
-            : String(rawFormat);
-
-          const elapsed = Math.round(performance.now() - startedAt);
-
-          if(text && text !== lastValue){
-            lastValue = text;
-
-            showResult(text, format, elapsed);
-            addHistory(text, format);
-
-            setCameraStatus("✓ КОД СЧИТАН", "success");
-            setDiagnostic(
-              "v4: код распознан. Формат: " + format,
-              "success"
-            );
-
-            if(navigator.vibrate){
-              navigator.vibrate(120);
-            }
-
-            // Stop only the returned controls; don't call reader.reset().
-            try{
-              if(controlsFromCallback && controlsFromCallback.stop){
-                controlsFromCallback.stop();
-              }else if(controls && controls.stop){
-                controls.stop();
-              }
-            }catch(e){}
-
-            controls = null;
-
-            if(video.srcObject){
-              video.srcObject.getTracks().forEach(t => t.stop());
-              video.srcObject = null;
-            }
-
-            scanner.style.display = "none";
-            startBtn.style.display = "block";
-            stopBtn.style.display = "none";
-          }
-        }
-      }
-    );
-
-    setCameraStatus(
-      "Камера работает. Наведите код в рамку.",
-      "info"
-    );
-    setDiagnostic(
-      "v4: камера работает. Проверяю QR и 1D штрихкоды.",
-      "info"
-    );
+    cameraDecodeLoop();
 
   }catch(error){
     await stopScanner();
-
-    setCameraStatus(
-      "Ошибка камеры: " +
-      (error.name || error.message || "неизвестная ошибка"),
-      "error"
-    );
-
-    setDiagnostic(
-      "v4: " + (error.stack || error.message || error),
-      "error"
-    );
+    setCameraStatus("Ошибка камеры: " + (error.name || error.message || "неизвестная ошибка"), "error");
+    setDiagnostic("v6: " + (error.stack || error.message || error), "error");
   }
 }
 
-async function stopScanner(){
+let cameraDecodeBusy = false;
+let cameraDecodeTimer = null;
+
+async function cameraDecodeLoop(){
+  if(!scanning) return;
+
+  if(cameraDecodeBusy || video.readyState < 2 || !video.videoWidth){
+    cameraDecodeTimer = setTimeout(cameraDecodeLoop, 250);
+    return;
+  }
+
+  cameraDecodeBusy = true;
+
   try{
-    if(controls && controls.stop){
-      controls.stop();
+    const vw = video.videoWidth;
+    const vh = video.videoHeight;
+    const sourceCanvas = document.getElementById("canvas");
+    const ctx = sourceCanvas.getContext("2d", {willReadFrequently:true});
+
+    const maxW = 1280;
+    const scale = Math.min(1, maxW / vw);
+    const w = Math.max(1, Math.round(vw * scale));
+    const h = Math.max(1, Math.round(vh * scale));
+
+    sourceCanvas.width = w;
+    sourceCanvas.height = h;
+    ctx.drawImage(video, 0, 0, w, h);
+
+    const candidates = [{name:"весь кадр", canvas:sourceCanvas}];
+
+    const strip = document.createElement("canvas");
+    strip.width = w;
+    strip.height = Math.max(120, Math.round(h * 0.32));
+    const sy = Math.round((h - strip.height) / 2);
+    const sctx = strip.getContext("2d", {willReadFrequently:true});
+    sctx.drawImage(sourceCanvas, 0, sy, w, strip.height, 0, 0, w, strip.height);
+    candidates.push({name:"центральная полоса", canvas:strip});
+
+    for(const candidate of candidates){
+      const found = await decodeDataUrl(candidate.canvas.toDataURL("image/jpeg", 0.92));
+      if(found){
+        finishCameraResult(found.text, found.format);
+        return;
+      }
+    }
+
+    const image = sctx.getImageData(0,0,strip.width,strip.height);
+    for(let i=0;i<image.data.length;i+=4){
+      image.data[i] = 255-image.data[i];
+      image.data[i+1] = 255-image.data[i+1];
+      image.data[i+2] = 255-image.data[i+2];
+    }
+    sctx.putImageData(image,0,0);
+
+    const invertedFound = await decodeDataUrl(strip.toDataURL("image/jpeg", 0.92));
+    if(invertedFound){
+      finishCameraResult(invertedFound.text, invertedFound.format);
+      return;
+    }
+
+  }catch(e){
+    setDiagnostic("v6: ошибка обработки кадра — " + (e.message || e), "error");
+  }finally{
+    cameraDecodeBusy = false;
+  }
+
+  if(scanning) cameraDecodeTimer = setTimeout(cameraDecodeLoop, 220);
+}
+
+async function decodeDataUrl(dataUrl){
+  try{
+    const result = await reader.decodeFromImageUrl(dataUrl);
+    if(result){
+      const text = result.getText();
+      const rawFormat = result.getBarcodeFormat ? result.getBarcodeFormat() : "UNKNOWN";
+      const format = rawFormat === 4 ? "CODE_128 (1D)" : String(rawFormat);
+      if(text) return {text, format};
     }
   }catch(e){}
+  return null;
+}
 
-  controls = null;
+function finishCameraResult(text, format){
+  if(!text || !scanning) return;
+
+  const elapsed = Math.round(performance.now() - startedAt);
+  lastValue = text;
+  showResult(text, format, elapsed);
+  addHistory(text, format);
+
+  setCameraStatus("✓ КОД СЧИТАН", "success");
+  setDiagnostic("v6: код распознан камерой. Формат: " + format, "success");
+
+  if(navigator.vibrate) navigator.vibrate(120);
+  stopScanner();
+}
+
+async function stopScanner(){
+  scanning = false;
+
+  if(cameraDecodeTimer){
+    clearTimeout(cameraDecodeTimer);
+    cameraDecodeTimer = null;
+  }
+
+  cameraDecodeBusy = false;
+
+  try{
+    if(reader && reader.reset) reader.reset();
+  }catch(e){}
+
+  reader = null;
 
   if(video.srcObject){
     video.srcObject.getTracks().forEach(t => t.stop());
     video.srcObject = null;
+  }
+
+  if(typeof stream !== "undefined" && stream){
+    try{ stream.getTracks().forEach(t => t.stop()); }catch(e){}
+    stream = null;
   }
 
   scanner.style.display = "none";
