@@ -46,7 +46,7 @@ body {
 h1 {
   text-align: center;
   font-size: 25px;
-  margin: 12px 0 5px;
+  margin: 10px 0 5px;
 }
 
 .subtitle {
@@ -65,36 +65,97 @@ h1 {
     0 2px 10px rgba(0,0,0,.06);
 }
 
-button {
-  width: 100%;
-  border: 0;
-  border-radius: 12px;
-  padding: 17px;
-
-  font-size: 18px;
+label {
+  display: block;
   font-weight: 600;
+  margin-bottom: 7px;
 }
 
-.scan {
+select,
+input {
+  width: 100%;
+  padding: 15px;
+
+  border:
+    1px solid #ccc;
+
+  border-radius: 10px;
+
+  font-size: 18px;
+
+  background: #fff;
+}
+
+button {
+  width: 100%;
+
+  border: 0;
+
+  border-radius: 12px;
+
+  padding: 16px;
+
+  font-size: 17px;
+
+  font-weight: 600;
+
+  margin-top: 12px;
+}
+
+.primary {
   background: #222;
   color: #fff;
 }
 
-.stop {
-  display: none;
-  margin-top: 10px;
-  background: #ddd;
-  color: #222;
-}
-
-.save {
-  margin-top: 18px;
+.blue {
   background: #1677ff;
   color: #fff;
 }
 
-#scanner {
+.gray {
+  background: #e5e5e5;
+  color: #222;
+}
 
+.danger {
+  background: #eee;
+  color: #a00000;
+}
+
+.machine-title {
+  font-size: 23px;
+  font-weight: 700;
+  margin-bottom: 18px;
+}
+
+.material-block {
+  border: 1px solid #ddd;
+
+  border-radius: 12px;
+
+  padding: 15px;
+
+  margin-bottom: 12px;
+}
+
+.material-name {
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.material-value {
+  margin-top: 7px;
+
+  word-break: break-all;
+
+  color: #555;
+}
+
+#workScreen {
+  display: none;
+}
+
+#scanner {
   display: none;
 
   position: relative;
@@ -150,29 +211,12 @@ button {
     0 1px 3px #000;
 }
 
-label {
-
-  display: block;
-
-  font-weight: 600;
-
-  margin-top: 14px;
+#stopScan {
+  display: none;
 }
 
-input {
-
-  width: 100%;
-
-  padding: 15px;
-
-  margin-top: 7px;
-
-  border:
-    1px solid #ccc;
-
-  border-radius: 10px;
-
-  font-size: 18px;
+#confirmBlock {
+  display: none;
 }
 
 #status {
@@ -186,31 +230,32 @@ input {
   border-radius: 10px;
 
   font-size: 16px;
+
+  word-break: break-word;
 }
 
 .success {
-
   background: #e9f7e9;
-
   color: #176b17;
 }
 
 .error {
-
   background: #fdecec;
-
   color: #a00000;
 }
 
 .info {
-
   background: #eef3f8;
-
   color: #333;
 }
 
 canvas {
   display: none;
+}
+
+.small {
+  color: #777;
+  font-size: 14px;
 }
 
 </style>
@@ -230,21 +275,237 @@ canvas {
 
 
 <div class="subtitle">
-Сканирование расходников
+Z-стекеры — тестовая версия
 </div>
+
+
+<!-- ========================= -->
+<!-- ВЫБОР ОПЕРАТОРА -->
+<!-- ========================= -->
+
+<div
+id="startScreen"
+class="card">
+
+
+<label>
+Оператор
+</label>
+
+
+<select id="operator">
+
+<option value="">
+Выберите оператора
+</option>
+
+<option value="Иванов И.И.">
+Иванов И.И.
+</option>
+
+<option value="Петров П.П.">
+Петров П.П.
+</option>
+
+<option value="Сидоров С.С.">
+Сидоров С.С.
+</option>
+
+</select>
+
+
+<label style="margin-top:18px;">
+Z-стекер
+</label>
+
+
+<select id="machine">
+
+<option value="">
+Выберите Z-стекер
+</option>
+
+<option value="ZST-001"
+data-name="Z-01">
+Z-01
+</option>
+
+<option value="ZST-002"
+data-name="Z-02">
+Z-02
+</option>
+
+<option value="ZST-003"
+data-name="Z-03">
+Z-03
+</option>
+
+<option value="ZST-004"
+data-name="Z-04">
+Z-04
+</option>
+
+<option value="ZST-005"
+data-name="Z-05">
+Z-05
+</option>
+
+<option value="ZST-006"
+data-name="Z-06">
+Z-06
+</option>
+
+</select>
+
+
+<button
+class="primary"
+onclick="openMachine()">
+
+ОТКРЫТЬ Z-СТЕКЕР
+
+</button>
+
+
+<div
+id="startStatus"
+class="small"
+style="margin-top:12px;">
+
+Выберите оператора и машину
+
+</div>
+
+
+</div>
+
+
+<!-- ========================= -->
+<!-- РАБОЧИЙ ЭКРАН -->
+<!-- ========================= -->
+
+<div
+id="workScreen">
 
 
 <div class="card">
 
 
-<button
-id="start"
-class="scan"
-onclick="startScanner()">
+<div
+id="machineTitle"
+class="machine-title">
 
-📷 СКАНИРОВАТЬ QR-КОД
+Z-СТЕКЕР
+
+</div>
+
+
+<div
+id="operatorInfo"
+class="small">
+
+</div>
+
+
+</div>
+
+
+<!-- КЛЕЙ -->
+
+<div class="card">
+
+
+<div class="material-block">
+
+
+<div class="material-name">
+КЛЕЙ
+</div>
+
+
+<div
+id="glueValue"
+class="material-value">
+
+Не установлен
+
+</div>
+
+
+<button
+class="blue"
+onclick="startGlueScan()">
+
+ЗАМЕНИТЬ КЛЕЙ
 
 </button>
+
+
+</div>
+
+
+<!-- СЕПАРАТОР ПОКА НЕ АКТИВЕН -->
+
+<div class="material-block">
+
+<div class="material-name">
+СЕПАРАТОР
+</div>
+
+<div class="material-value">
+Будет добавлен следующим этапом
+</div>
+
+</div>
+
+
+<!-- МАГАЗИНЫ ПОКА НЕ АКТИВНЫ -->
+
+<div class="material-block">
+
+<div class="material-name">
+МАГАЗИНЫ ЭЛЕКТРОДОВ
+</div>
+
+<div class="material-value">
+Будут добавлены следующим этапом
+</div>
+
+</div>
+
+
+<button
+class="gray"
+onclick="changeMachine()">
+
+📷 СКАНИРОВАТЬ / ВЫБРАТЬ ДРУГУЮ МАШИНУ
+
+</button>
+
+
+</div>
+
+
+</div>
+
+
+<!-- ========================= -->
+<!-- СКАНЕР -->
+<!-- ========================= -->
+
+<div
+id="scannerCard"
+class="card"
+style="display:none;">
+
+
+<div
+id="scanTitle"
+class="machine-title">
+
+СКАНИРОВАНИЕ
+
+</div>
 
 
 <div id="scanner">
@@ -264,7 +525,7 @@ playsinline>
 
 <div class="hint">
 
-Наведите рамку на QR-код
+Наведите QR-код в рамку
 
 </div>
 
@@ -273,11 +534,11 @@ playsinline>
 
 
 <button
-id="stop"
-class="stop"
+id="stopScan"
+class="gray"
 onclick="stopScanner()">
 
-ОСТАНОВИТЬ
+ОСТАНОВИТЬ КАМЕРУ
 
 </button>
 
@@ -289,47 +550,52 @@ onclick="stopScanner()">
 </div>
 
 
-<div class="card">
+<!-- ========================= -->
+<!-- ПОДТВЕРЖДЕНИЕ -->
+<!-- ========================= -->
+
+<div
+id="confirmBlock"
+class="card">
 
 
-<label>
-Данные QR
-</label>
+<div class="machine-title">
+
+ПРОВЕРЬТЕ ДАННЫЕ
+
+</div>
 
 
-<input
-id="barcode"
-type="text"
-placeholder="После сканирования появятся данные">
+<div
+id="confirmData"
+class="material-value">
 
-
-<label>
-Количество
-</label>
-
-
-<input
-id="quantity"
-type="number"
-min="1"
-step="1"
-value="1">
+</div>
 
 
 <button
-id="save"
-class="save"
-onclick="saveData()">
+class="blue"
+onclick="confirmGlue()">
 
-СОХРАНИТЬ
+ПОДТВЕРДИТЬ И СОХРАНИТЬ
 
 </button>
 
 
-<div id="status">
+<button
+class="gray"
+onclick="cancelOperation()">
+
+ОТМЕНА
+
+</button>
+
+
 </div>
 
 
+<div
+id="status">
 </div>
 
 
@@ -337,6 +603,11 @@ onclick="saveData()">
 
 
 <script>
+
+
+/* ==========================================
+   НАСТРОЙКИ
+========================================== */
 
 
 const BACKEND_URL =
@@ -349,17 +620,25 @@ let scanning = false;
 
 let timer = null;
 
+let currentOperator = "";
+
+let currentMachineId = "";
+
+let currentMachineName = "";
+
+let scannedGlue = "";
 
 
-function showStatus(
-  message,
-  type
-) {
+
+/* ==========================================
+   СТАТУС
+========================================== */
+
+
+function showStatus(message, type) {
 
   const element =
-    document.getElementById(
-      "status"
-    );
+    document.getElementById("status");
 
   element.style.display =
     "block";
@@ -372,13 +651,231 @@ function showStatus(
 
   element.textContent =
     message;
+
 }
 
 
 
+/* ==========================================
+   ОТКРЫТИЕ МАШИНЫ
+========================================== */
+
+
+function openMachine() {
+
+
+  const operator =
+    document.getElementById(
+      "operator"
+    ).value;
+
+
+  const machine =
+    document.getElementById(
+      "machine"
+    );
+
+
+  const machineId =
+    machine.value;
+
+
+  if (!operator) {
+
+    document.getElementById(
+      "startStatus"
+    ).textContent =
+      "Сначала выберите оператора.";
+
+    return;
+
+  }
+
+
+  if (!machineId) {
+
+    document.getElementById(
+      "startStatus"
+    ).textContent =
+      "Выберите Z-стекер.";
+
+    return;
+
+  }
+
+
+  currentOperator =
+    operator;
+
+
+  currentMachineId =
+    machineId;
+
+
+  currentMachineName =
+    machine.options[
+      machine.selectedIndex
+    ].dataset.name;
+
+
+  document.getElementById(
+    "startScreen"
+  ).style.display =
+    "none";
+
+
+  document.getElementById(
+    "workScreen"
+  ).style.display =
+    "block";
+
+
+  document.getElementById(
+    "machineTitle"
+  ).textContent =
+    "Z-СТЕКЕР " +
+    currentMachineName;
+
+
+  document.getElementById(
+    "operatorInfo"
+  ).textContent =
+    "Оператор: " +
+    currentOperator;
+
+
+  loadState();
+
+}
+
+
+
+/* ==========================================
+   ПОЛУЧЕНИЕ ТЕКУЩЕГО СОСТОЯНИЯ
+========================================== */
+
+
+function loadState() {
+
+
+  showStatus(
+    "Загрузка состояния машины...",
+    "info"
+  );
+
+
+  const url =
+    BACKEND_URL +
+    "?action=getState" +
+    "&machineId=" +
+    encodeURIComponent(
+      currentMachineId
+    );
+
+
+  fetch(url)
+
+    .then(response =>
+      response.text()
+    )
+
+    .then(text => {
+
+
+      if (
+        text.startsWith("ERROR|")
+      ) {
+
+        showStatus(
+          text.substring(6),
+          "error"
+        );
+
+        return;
+
+      }
+
+
+      try {
+
+        const data =
+          JSON.parse(text);
+
+
+        document.getElementById(
+          "glueValue"
+        ).textContent =
+          data.glue ||
+          "Не установлен";
+
+
+        hideStatus();
+
+      }
+
+      catch(error) {
+
+        showStatus(
+          "Не удалось получить состояние машины.",
+          "error"
+        );
+
+      }
+
+    })
+
+    .catch(error => {
+
+      showStatus(
+        "Ошибка связи с сервером.",
+        "error"
+      );
+
+    });
+
+}
+
+
+
+/* ==========================================
+   СКАНИРОВАНИЕ КЛЕЯ
+========================================== */
+
+
+function startGlueScan() {
+
+
+  scannedGlue = "";
+
+
+  document.getElementById(
+    "scannerCard"
+  ).style.display =
+    "block";
+
+
+  document.getElementById(
+    "scanTitle"
+  ).textContent =
+    "СКАНИРУЙТЕ КЛЕЙ";
+
+
+  startScanner();
+
+}
+
+
+
+/* ==========================================
+   КАМЕРА
+========================================== */
+
+
 async function startScanner() {
 
+
   try {
+
 
     if (
       !navigator.mediaDevices ||
@@ -391,6 +888,7 @@ async function startScanner() {
       );
 
       return;
+
     }
 
 
@@ -447,13 +945,7 @@ async function startScanner() {
 
 
     document.getElementById(
-      "start"
-    ).style.display =
-      "none";
-
-
-    document.getElementById(
-      "stop"
+      "stopScan"
     ).style.display =
       "block";
 
@@ -472,16 +964,19 @@ async function startScanner() {
 
   }
 
-  catch (error) {
+
+  catch(error) {
+
 
     stopScanner();
 
 
     showStatus(
       "Не удалось открыть камеру: " +
-      (error.name ||
-       error.message),
-
+      (
+        error.name ||
+        error.message
+      ),
       "error"
     );
 
@@ -489,6 +984,11 @@ async function startScanner() {
 
 }
 
+
+
+/* ==========================================
+   ПОИСК QR
+========================================== */
 
 
 function scanLoop() {
@@ -529,7 +1029,8 @@ function scanLoop() {
       canvas.getContext(
         "2d",
         {
-          willReadFrequently: true
+          willReadFrequently:
+            true
         }
       );
 
@@ -575,19 +1076,14 @@ function scanLoop() {
     ) {
 
 
-      document.getElementById(
-        "barcode"
-      ).value =
+      scannedGlue =
         result.data;
 
 
-      showStatus(
-        "✓ QR-код считан",
-        "success"
-      );
-
-
       stopScanner();
+
+
+      showGlueConfirmation();
 
 
       return;
@@ -605,6 +1101,11 @@ function scanLoop() {
 
 }
 
+
+
+/* ==========================================
+   ОСТАНОВКА КАМЕРЫ
+========================================== */
 
 
 function stopScanner() {
@@ -652,13 +1153,7 @@ function stopScanner() {
 
 
   document.getElementById(
-    "start"
-  ).style.display =
-    "block";
-
-
-  document.getElementById(
-    "stop"
+    "stopScan"
   ).style.display =
     "none";
 
@@ -666,202 +1161,301 @@ function stopScanner() {
 
 
 
-function saveData() {
+/* ==========================================
+   ПОДТВЕРЖДЕНИЕ КЛЕЯ
+========================================== */
 
 
-  const barcode =
-    document.getElementById(
-      "barcode"
-    ).value.trim();
+function showGlueConfirmation() {
 
 
-  const quantity =
-    Number(
-      document.getElementById(
-        "quantity"
-      ).value
+  document.getElementById(
+    "confirmBlock"
+  ).style.display =
+    "block";
+
+
+  document.getElementById(
+    "confirmData"
+  ).innerHTML =
+
+    "<b>Машина:</b> " +
+    currentMachineName +
+
+    "<br><br>" +
+
+    "<b>Оператор:</b> " +
+    currentOperator +
+
+    "<br><br>" +
+
+    "<b>Материал:</b> Клей" +
+
+    "<br><br>" +
+
+    "<b>Код:</b> " +
+    escapeHtml(
+      scannedGlue
     );
-
-
-  const button =
-    document.getElementById(
-      "save"
-    );
-
-
-  if (!barcode) {
-
-    showStatus(
-      "Сначала отсканируйте QR-код.",
-      "error"
-    );
-
-    return;
-
-  }
-
-
-  if (
-    !Number.isFinite(quantity) ||
-    quantity <= 0
-  ) {
-
-    showStatus(
-      "Введите количество.",
-      "error"
-    );
-
-    return;
-
-  }
-
-
-  button.disabled = true;
-
-  button.textContent =
-    "СОХРАНЕНИЕ...";
 
 
   showStatus(
-    "Передаю запись в Google...",
+    "QR-код считан. Проверьте данные.",
+    "info"
+  );
+
+}
+
+
+
+/* ==========================================
+   СОХРАНЕНИЕ КЛЕЯ
+========================================== */
+
+
+function confirmGlue() {
+
+
+  if (!scannedGlue) {
+
+    showStatus(
+      "Код клея отсутствует.",
+      "error"
+    );
+
+    return;
+
+  }
+
+
+  showStatus(
+    "Сохраняем...",
     "info"
   );
 
 
-  const iframe =
-    document.createElement(
-      "iframe"
+  const url =
+    BACKEND_URL +
+
+    "?action=save" +
+
+    "&operator=" +
+    encodeURIComponent(
+      currentOperator
+    ) +
+
+    "&machineId=" +
+    encodeURIComponent(
+      currentMachineId
+    ) +
+
+    "&machine=" +
+    encodeURIComponent(
+      currentMachineName
+    ) +
+
+    "&operation=" +
+    encodeURIComponent(
+      "Замена клея"
+    ) +
+
+    "&materialType=" +
+    encodeURIComponent(
+      "Клей"
+    ) +
+
+    "&materialCode=" +
+    encodeURIComponent(
+      scannedGlue
+    ) +
+
+    "&batch=" +
+    encodeURIComponent(
+      scannedGlue
     );
 
 
-  const frameName =
-    "save_" +
-    Date.now();
+  fetch(url)
+
+    .then(response =>
+      response.text()
+    )
+
+    .then(text => {
 
 
-  iframe.name =
-    frameName;
+      if (
+        text.startsWith("ERROR|")
+      ) {
 
-
-  iframe.style.display =
-    "none";
-
-
-  document.body.appendChild(
-    iframe
-  );
-
-
-  const form =
-    document.createElement(
-      "form"
-    );
-
-
-  form.method =
-    "GET";
-
-
-  form.action =
-    BACKEND_URL;
-
-
-  form.target =
-    frameName;
-
-
-  form.style.display =
-    "none";
-
-
-  const fields = {
-
-    action: "save",
-
-    barcode: barcode,
-
-    quantity:
-      String(quantity)
-
-  };
-
-
-  Object.entries(fields)
-    .forEach(
-      function([name, value]) {
-
-
-        const input =
-          document.createElement(
-            "input"
-          );
-
-
-        input.type =
-          "hidden";
-
-
-        input.name =
-          name;
-
-
-        input.value =
-          value;
-
-
-        form.appendChild(
-          input
+        showStatus(
+          text.substring(6),
+          "error"
         );
 
+        return;
 
       }
-    );
 
 
-  document.body.appendChild(
-    form
-  );
+      document.getElementById(
+        "confirmBlock"
+      ).style.display =
+        "none";
 
 
-  form.submit();
-
-
-  setTimeout(
-    function() {
-
-
-      form.remove();
-
-      iframe.remove();
-
-
-      button.disabled =
-        false;
-
-
-      button.textContent =
-        "СОХРАНИТЬ";
+      scannedGlue = "";
 
 
       showStatus(
-        "✓ Запись передана в Google Sheets. Проверьте журнал.",
+        "✓ Клей успешно заменён.",
         "success"
       );
 
 
-      document.getElementById(
-        "barcode"
-      ).value = "";
+      loadState();
 
 
-      document.getElementById(
-        "quantity"
-      ).value = "1";
+    })
+
+    .catch(error => {
+
+      showStatus(
+        "Ошибка передачи данных.",
+        "error"
+      );
+
+    });
+
+}
 
 
-    },
-    1500
+
+/* ==========================================
+   ОТМЕНА
+========================================== */
+
+
+function cancelOperation() {
+
+
+  scannedGlue = "";
+
+
+  document.getElementById(
+    "confirmBlock"
+  ).style.display =
+    "none";
+
+
+  document.getElementById(
+    "scannerCard"
+  ).style.display =
+    "none";
+
+
+  stopScanner();
+
+
+  showStatus(
+    "Операция отменена.",
+    "info"
   );
+
+}
+
+
+
+/* ==========================================
+   СМЕНА МАШИНЫ
+========================================== */
+
+
+function changeMachine() {
+
+
+  stopScanner();
+
+
+  document.getElementById(
+    "workScreen"
+  ).style.display =
+    "none";
+
+
+  document.getElementById(
+    "scannerCard"
+  ).style.display =
+    "none";
+
+
+  document.getElementById(
+    "confirmBlock"
+  ).style.display =
+    "none";
+
+
+  document.getElementById(
+    "startScreen"
+  ).style.display =
+    "block";
+
+
+  hideStatus();
+
+}
+
+
+
+/* ==========================================
+   СКРЫТЬ СТАТУС
+========================================== */
+
+
+function hideStatus() {
+
+  document.getElementById(
+    "status"
+  ).style.display =
+    "none";
+
+}
+
+
+
+/* ==========================================
+   ЗАЩИТА HTML
+========================================== */
+
+
+function escapeHtml(text) {
+
+  return String(text)
+
+    .replace(
+      /&/g,
+      "&amp;"
+    )
+
+    .replace(
+      /</g,
+      "&lt;"
+    )
+
+    .replace(
+      />/g,
+      "&gt;"
+    )
+
+    .replace(
+      /"/g,
+      "&quot;"
+    )
+
+    .replace(
+      /'/g,
+      "&#039;"
+    );
 
 }
 
