@@ -4,8 +4,29 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#222">
-<title>Учёт материалов — WORK v5 · SCANNER v8</title>
-<script src="https://unpkg.com/@zxing/browser@0.1.5/umd/zxing-browser.min.js"></script>
+<title>Учёт материалов — WORK v6 · SCANNER v8</title>
+<script src="https://unpkg.com/@zxing/browser@0.1.5/umd/zxing-browser.min.js">
+function getMoscowTimestamp(){
+  const now = new Date();
+  const parts = new Intl.DateTimeFormat("ru-RU", {
+    timeZone: "Europe/Moscow",
+    year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit", second: "2-digit",
+    hour12: false
+  }).formatToParts(now);
+  const v = {};
+  parts.forEach(p => { if(p.type !== "literal") v[p.type] = p.value; });
+  return `${v.year}-${v.month}-${v.day}T${v.hour}:${v.minute}:${v.second}+03:00`;
+}
+function getMoscowDateTimeDisplay(){
+  return new Intl.DateTimeFormat("ru-RU", {
+    timeZone: "Europe/Moscow",
+    year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit", second: "2-digit",
+    hour12: false
+  }).format(new Date());
+}
+</script>
 <style>
 *{box-sizing:border-box}
 body{margin:0;padding:18px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:#f4f4f4;color:#222}
@@ -271,7 +292,7 @@ function applyLocalOperation(state,op){
     if(String(s.shop1)===String(op.lotId))s.shop1="";
     else if(String(s.shop2)===String(op.lotId))s.shop2="";
   }
-  s.updated=new Date().toISOString();s.operator=op.operator;return s;
+  s.updated=getMoscowTimestamp();s.operator=op.operator;return s;
 }
 
 function openMachine(){
@@ -597,7 +618,7 @@ async function syncQueue(){
 }
 async function confirmOperation(){
   if(!scannedLot){showStatus("Lot ID не найден.","error");return}
-  const op={operationId:makeOperationId(),operator:currentOperator,machineId:currentMachineId,machine:currentMachineName,operation:currentOperation,materialType:getMaterialType(),lotId:scannedLot,meters:scannedMeters,rawCode:scannedRaw,createdAt:new Date().toISOString()};
+  const op={operationId:makeOperationId(),operator:currentOperator,machineId:currentMachineId,machine:currentMachineName,operation:currentOperation,materialType:getMaterialType(),lotId:scannedLot,meters:scannedMeters,rawCode:scannedRaw,createdAt:getMoscowTimestamp()};
   showStatus(navigator.onLine?"Сохраняем...":"🟠 Нет связи. Сохраняем операцию на телефоне...","info");
   try{
     await saveOperation(op);
@@ -609,7 +630,7 @@ async function confirmOperation(){
 }
 function removeShop(shopCode){
   if(!confirm("Снять магазин "+shopCode+"?"))return;
-  const op={operationId:makeOperationId(),operator:currentOperator,machineId:currentMachineId,machine:currentMachineName,operation:"Снятие магазина",materialType:"Магазин электродов",lotId:shopCode,meters:"",rawCode:shopCode,createdAt:new Date().toISOString()};
+  const op={operationId:makeOperationId(),operator:currentOperator,machineId:currentMachineId,machine:currentMachineName,operation:"Снятие магазина",materialType:"Магазин электродов",lotId:shopCode,meters:"",rawCode:shopCode,createdAt:getMoscowTimestamp()};
   showStatus(navigator.onLine?"Снимаем магазин...":"🟠 Нет связи. Снятие сохранится на телефоне.","info");
   saveOperation(op).then(()=>{if(getQueue().some(x=>x.operationId===op.operationId))showStatus("🟠 Снятие магазина сохранено и ожидает отправки.","info");else showStatus("✓ Магазин снят и синхронизирован.","success")}).catch(e=>showStatus("🔴 Не удалось сохранить операцию: "+e.message,"error"))
 }
