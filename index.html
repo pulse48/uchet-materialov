@@ -61,7 +61,7 @@ canvas{display:none}
 
 <body>
 <div class="app">
-<div style="text-align:center;font-size:12px;color:#777;margin:0 0 10px">ТЕСТ СКАНЕРА • v4 • 1D + QR</div>
+<div style="text-align:center;font-size:12px;color:#777;margin:0 0 10px">ТЕСТ СКАНЕРА • v5 • 1D + QR</div>
 
 <h1>ТЕСТ СКАНЕРА</h1>
 <div class="subtitle">QR + 1D штрихкоды + Data Matrix</div>
@@ -78,6 +78,13 @@ canvas{display:none}
 
   <div id="cameraStatus" class="status info">
     Камера не запущена.
+  </div>
+</div>
+
+<div class="card">
+  <b>ДИАГНОСТИКА</b>
+  <div id="diagnostic" class="status info" style="margin-top:10px">
+    Готов к тесту.
   </div>
 </div>
 
@@ -144,6 +151,7 @@ function setCameraStatus(text, type="info"){
 
 function setDiagnostic(text, type="info"){
   const el = document.getElementById("diagnostic");
+  if(!el) return;
   el.textContent = text;
   el.className = "status " + type;
 }
@@ -224,9 +232,12 @@ async function startScanner(){
 
         if(result){
           const text = result.getText();
-          const format = result.getBarcodeFormat
-            ? String(result.getBarcodeFormat())
+          const rawFormat = result.getBarcodeFormat
+            ? result.getBarcodeFormat()
             : "UNKNOWN";
+          const format = rawFormat === 4
+            ? "CODE_128 (1D)"
+            : String(rawFormat);
 
           const elapsed = Math.round(performance.now() - startedAt);
 
@@ -347,7 +358,8 @@ document.getElementById("photo").addEventListener("change", async function(){
           const result = await reader.decodeFromImageElement(img);
           if(result){
             const text = result.getText();
-            const format = result.getBarcodeFormat ? String(result.getBarcodeFormat()) : "UNKNOWN";
+            const rawFormat = result.getBarcodeFormat ? result.getBarcodeFormat() : "UNKNOWN";
+          const format = rawFormat === 4 ? "CODE_128 (1D)" : String(rawFormat);
             showResult(text, format, 0);
             addHistory(text, format);
             photoStatus.textContent = "✓ Код найден на исходной фотографии.";
