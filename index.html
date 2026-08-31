@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#222">
-<title>Учёт материалов — WORK v2 · SCANNER v8</title>
+<title>Учёт материалов — WORK v3 · SCANNER v8</title>
 <script src="https://unpkg.com/@zxing/browser@0.1.5/umd/zxing-browser.min.js"></script>
 <style>
 *{box-sizing:border-box}
@@ -42,13 +42,40 @@ button{width:100%;border:0;border-radius:12px;padding:15px;font-size:16px;font-w
 .small{color:#777;font-size:14px}
 .parsed-box{margin-top:12px;padding:12px;border-radius:10px;background:#f4f4f4}
 .parsed-row{margin-top:5px}.parsed-label{color:#777}.parsed-value{font-weight:700;word-break:break-all}
+
+/* WORK v3: верхняя зона сканирования и статуса */
+#scannerCard{
+  order:-10;
+  margin-bottom:15px;
+}
+#scannerCard .scan-top-status{
+  display:block;
+  font-size:16px;
+  font-weight:700;
+  margin-bottom:8px;
+}
+#scannerCard #scanner{
+  margin-top:10px;
+}
+#status{
+  position:sticky;
+  top:8px;
+  z-index:100;
+  margin:0 0 12px;
+  box-shadow:0 2px 8px rgba(0,0,0,.08);
+}
+.work-layout{
+  display:flex;
+  flex-direction:column;
+}
+
 </style>
 </head>
 <body>
 <div class="app">
 <h1>УЧЁТ МАТЕРИАЛОВ</h1>
 <div class="subtitle">Z-стекеры</div>
-<div style="text-align:center;font-size:12px;color:#777;margin:-4px 0 12px">WORK v2 · SCANNER v8</div>
+<div style="text-align:center;font-size:12px;color:#777;margin:-4px 0 12px">WORK v3 · SCANNER v8</div>
 <div id="connectionStatus" class="connection online">🟢 ОНЛАЙН</div>
 
 <div id="startScreen" class="card">
@@ -119,6 +146,7 @@ button{width:100%;border:0;border-radius:12px;padding:15px;font-size:16px;font-w
 </div>
 
 <div id="confirmBlock" class="card">
+<div id="confirmTopStatus" class="scan-top-status"></div>
 <div class="machine-title">ПРОВЕРЬТЕ ДАННЫЕ</div>
 <div id="confirmData" class="material-value"></div>
 <button class="blue" onclick="confirmOperation()">ПОДТВЕРДИТЬ И СОХРАНИТЬ</button>
@@ -473,6 +501,8 @@ function stopScanner(){
 
   document.getElementById("scanner").style.display="none";
   document.getElementById("stopScan").style.display="none";
+  const top = document.getElementById("scanTopStatus");
+  if(top && !scanning) top.textContent = "Нажмите кнопку сканирования ниже";
 }
 
 function showConfirmation(){
