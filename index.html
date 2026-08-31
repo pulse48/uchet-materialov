@@ -1,2079 +1,417 @@
 <!doctype html>
 <html lang="ru">
-
 <head>
-
 <meta charset="utf-8">
-
-<meta name="viewport"
-content="width=device-width,
-initial-scale=1,
-maximum-scale=1,
-viewport-fit=cover">
-
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#222">
-
 <title>Учёт материалов</title>
-
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
-
 <style>
-
-* {
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-  padding: 18px;
-
-  font-family:
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    Arial,
-    sans-serif;
-
-  background: #f4f4f4;
-  color: #222;
-}
-
-.app {
-  max-width: 520px;
-  margin: auto;
-}
-
-h1 {
-  text-align: center;
-  font-size: 25px;
-  margin: 10px 0 5px;
-}
-
-.subtitle {
-  text-align: center;
-  color: #777;
-  margin-bottom: 20px;
-}
-
-.card {
-  background: #fff;
-  border-radius: 16px;
-  padding: 18px;
-  margin-bottom: 15px;
-
-  box-shadow:
-    0 2px 10px rgba(0,0,0,.06);
-}
-
-label {
-  display: block;
-  font-weight: 600;
-  margin-bottom: 7px;
-}
-
-select {
-  width: 100%;
-  padding: 15px;
-
-  border: 1px solid #ccc;
-
-  border-radius: 10px;
-
-  font-size: 18px;
-
-  background: #fff;
-}
-
-button {
-  width: 100%;
-
-  border: 0;
-
-  border-radius: 12px;
-
-  padding: 15px;
-
-  font-size: 16px;
-
-  font-weight: 600;
-
-  margin-top: 10px;
-}
-
-.primary {
-  background: #222;
-  color: #fff;
-}
-
-.blue {
-  background: #1677ff;
-  color: #fff;
-}
-
-.gray {
-  background: #e5e5e5;
-  color: #222;
-}
-
-.danger {
-  background: #eee;
-  color: #a00000;
-}
-
-.machine-title {
-  font-size: 23px;
-  font-weight: 700;
-  margin-bottom: 8px;
-}
-
-.operator-info {
-  color: #777;
-  font-size: 14px;
-}
-
-.material-block {
-  border: 1px solid #ddd;
-
-  border-radius: 12px;
-
-  padding: 15px;
-
-  margin-bottom: 12px;
-}
-
-.material-name {
-  font-size: 17px;
-  font-weight: 700;
-}
-
-.status {
-  margin-top: 6px;
-
-  font-size: 14px;
-
-  font-weight: 700;
-}
-
-.status-installed {
-  color: #16821c;
-}
-
-.status-empty {
-  color: #777;
-}
-
-.material-value {
-  margin-top: 8px;
-
-  word-break: break-all;
-
-  color: #555;
-
-  font-size: 14px;
-}
-
-.shop-row {
-  display: flex;
-
-  align-items: center;
-
-  gap: 8px;
-
-  margin-top: 9px;
-}
-
-.shop-code {
-  flex: 1;
-
-  padding: 11px;
-
-  background: #f4f4f4;
-
-  border-radius: 9px;
-
-  word-break: break-all;
-
-  font-size: 14px;
-}
-
-.shop-row button {
-  width: auto;
-
-  margin: 0;
-
-  padding: 10px 12px;
-
-  font-size: 14px;
-}
-
-#scannerCard,
-#confirmBlock,
-#status {
-  display: none;
-}
-
-#scanner {
-
-  position: relative;
-
-  overflow: hidden;
-
-  border-radius: 14px;
-
-  background: #000;
-
-  margin-top: 12px;
-}
-
-#video {
-
-  width: 100%;
-
-  display: block;
-}
-
-.frame {
-
-  position: absolute;
-
-  left: 10%;
-  right: 10%;
-
-  top: 28%;
-
-  height: 44%;
-
-  border: 3px solid #fff;
-
-  border-radius: 10px;
-
-  pointer-events: none;
-}
-
-.hint {
-
-  position: absolute;
-
-  bottom: 12px;
-
-  left: 0;
-  right: 0;
-
-  text-align: center;
-
-  color: #fff;
-
-  font-size: 14px;
-
-  text-shadow:
-    0 1px 3px #000;
-}
-
-#stopScan {
-  display: none;
-}
-
-#canvas {
-  display: none;
-}
-
-.success {
-  background: #e9f7e9;
-
-  color: #176b17;
-
-  padding: 13px;
-
-  border-radius: 10px;
-}
-
-.error {
-  background: #fdecec;
-
-  color: #a00000;
-
-  padding: 13px;
-
-  border-radius: 10px;
-}
-
-.info {
-  background: #eef3f8;
-
-  color: #333;
-
-  padding: 13px;
-
-  border-radius: 10px;
-}
-
-.small {
-  color: #777;
-
-  font-size: 14px;
-}
-
+*{box-sizing:border-box}
+body{margin:0;padding:18px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:#f4f4f4;color:#222}
+.app{max-width:520px;margin:auto}
+h1{text-align:center;font-size:25px;margin:10px 0 5px}
+.subtitle{text-align:center;color:#777;margin-bottom:12px}
+.card{background:#fff;border-radius:16px;padding:18px;margin-bottom:15px;box-shadow:0 2px 10px rgba(0,0,0,.06)}
+label{display:block;font-weight:600;margin-bottom:7px}
+select{width:100%;padding:15px;border:1px solid #ccc;border-radius:10px;font-size:18px;background:#fff}
+button{width:100%;border:0;border-radius:12px;padding:15px;font-size:16px;font-weight:600;margin-top:10px}
+.primary{background:#222;color:#fff}.blue{background:#1677ff;color:#fff}.gray{background:#e5e5e5;color:#222}.danger{background:#eee;color:#a00000}
+.machine-title{font-size:23px;font-weight:700;margin-bottom:8px}
+.operator-info{color:#777;font-size:14px}
+.connection{padding:12px 14px;border-radius:10px;font-size:14px;font-weight:700;margin-top:14px}
+.online{background:#e9f7e9;color:#176b17}.offline{background:#fff3d9;color:#8a5a00}.syncing{background:#eef3f8;color:#333}
+.state-loading{margin-top:10px;padding:12px;border-radius:10px;background:#eef3f8;color:#333;font-weight:600}
+.state-ok{margin-top:10px;padding:12px;border-radius:10px;background:#e9f7e9;color:#176b17;font-weight:600}
+.state-error{margin-top:10px;padding:12px;border-radius:10px;background:#fdecec;color:#a00000;font-weight:600}
+.pending{margin-top:10px;padding:10px 12px;border-radius:10px;background:#fff3d9;color:#8a5a00;font-size:14px;font-weight:600}
+.material-block{border:1px solid #ddd;border-radius:12px;padding:15px;margin-bottom:12px}
+.material-name{font-size:17px;font-weight:700}
+.status{margin-top:6px;font-size:14px;font-weight:700}
+.status-installed{color:#16821c}.status-empty{color:#777}
+.material-value{margin-top:8px;word-break:break-all;color:#555;font-size:14px}
+.shop-row{display:flex;align-items:center;gap:8px;margin-top:9px}
+.shop-code{flex:1;padding:11px;background:#f4f4f4;border-radius:9px;word-break:break-all;font-size:14px}
+.shop-row button{width:auto;margin:0;padding:10px 12px;font-size:14px}
+#scannerCard,#confirmBlock,#status{display:none}
+#scanner{position:relative;overflow:hidden;border-radius:14px;background:#000;margin-top:12px}
+#video{width:100%;display:block}
+.frame{position:absolute;left:10%;right:10%;top:28%;height:44%;border:3px solid #fff;border-radius:10px;pointer-events:none}
+.hint{position:absolute;bottom:12px;left:0;right:0;text-align:center;color:#fff;font-size:14px;text-shadow:0 1px 3px #000}
+#stopScan,#canvas{display:none}
+.success,.error,.info{padding:13px;border-radius:10px}
+.success{background:#e9f7e9;color:#176b17}.error{background:#fdecec;color:#a00000}.info{background:#eef3f8;color:#333}
+.small{color:#777;font-size:14px}
 </style>
-
 </head>
-
-
 <body>
-
-
 <div class="app">
+<h1>УЧЁТ МАТЕРИАЛОВ</h1>
+<div class="subtitle">Z-стекеры</div>
 
-
-<h1>
-УЧЁТ МАТЕРИАЛОВ
-</h1>
-
-
-<div class="subtitle">
-Z-стекеры
-</div>
-
-
-<!-- ============================= -->
-<!-- НАЧАЛО -->
-<!-- ============================= -->
+<div id="connectionStatus" class="connection online">🟢 ОНЛАЙН</div>
 
 <div id="startScreen" class="card">
-
-
-<label>
-Оператор
-</label>
-
-
+<label>Оператор</label>
 <select id="operator">
-
-<option value="">
-Выберите оператора
-</option>
-
-<option value="Иванов И.И.">
-Иванов И.И.
-</option>
-
-<option value="Петров П.П.">
-Петров П.П.
-</option>
-
-<option value="Сидоров С.С.">
-Сидоров С.С.
-</option>
-
+<option value="">Выберите оператора</option>
+<option value="Иванов И.И.">Иванов И.И.</option>
+<option value="Петров П.П.">Петров П.П.</option>
+<option value="Сидоров С.С.">Сидоров С.С.</option>
 </select>
 
-
-<label style="margin-top:18px;">
-Z-стекер
-</label>
-
-
+<label style="margin-top:18px">Z-стекер</label>
 <select id="machine">
-
-<option value="">
-Выберите Z-стекер
-</option>
-
-<option value="ZST-001"
-data-name="Z-01">
-Z-01
-</option>
-
-<option value="ZST-002"
-data-name="Z-02">
-Z-02
-</option>
-
-<option value="ZST-003"
-data-name="Z-03">
-Z-03
-</option>
-
-<option value="ZST-004"
-data-name="Z-04">
-Z-04
-</option>
-
-<option value="ZST-005"
-data-name="Z-05">
-Z-05
-</option>
-
-<option value="ZST-006"
-data-name="Z-06">
-Z-06
-</option>
-
+<option value="">Выберите Z-стекер</option>
+<option value="ZST-001" data-name="Z-01">Z-01</option>
+<option value="ZST-002" data-name="Z-02">Z-02</option>
+<option value="ZST-003" data-name="Z-03">Z-03</option>
+<option value="ZST-004" data-name="Z-04">Z-04</option>
+<option value="ZST-005" data-name="Z-05">Z-05</option>
+<option value="ZST-006" data-name="Z-06">Z-06</option>
 </select>
-
-
-<button
-class="primary"
-onclick="openMachine()">
-
-ОТКРЫТЬ Z-СТЕКЕР
-
-</button>
-
-
-<div
-id="startStatus"
-class="small"
-style="margin-top:12px;">
-
-Выберите оператора и машину
-
+<button class="primary" onclick="openMachine()">ОТКРЫТЬ Z-СТЕКЕР</button>
+<div id="startStatus" class="small" style="margin-top:12px">Выберите оператора и машину</div>
 </div>
 
-
+<div id="workScreen" style="display:none">
+<div class="card">
+<div id="machineTitle" class="machine-title">Z-СТЕКЕР</div>
+<div id="operatorInfo" class="operator-info"></div>
+<div id="stateStatus" class="state-loading">🔄 Загрузка состояния машины...</div>
+<div id="pendingInfo" class="pending" style="display:none"></div>
 </div>
-
-
-<!-- ============================= -->
-<!-- РАБОЧИЙ ЭКРАН -->
-<!-- ============================= -->
-
-<div
-id="workScreen"
-style="display:none;">
-
 
 <div class="card">
-
-<div
-id="machineTitle"
-class="machine-title">
-
-Z-СТЕКЕР
-
+<div class="material-block">
+<div class="material-name">КЛЕЙ</div>
+<div id="glueStatus" class="status status-empty">⚪ НЕ УСТАНОВЛЕН</div>
+<div id="glueValue" class="material-value">—</div>
+<button class="blue" onclick="startGlueScan()">ЗАМЕНИТЬ КЛЕЙ</button>
 </div>
-
-<div
-id="operatorInfo"
-class="operator-info">
-
-</div>
-
-</div>
-
-
-
-<!-- ============================= -->
-<!-- КЛЕЙ -->
-<!-- ============================= -->
-
-<div class="card">
-
 
 <div class="material-block">
-
-
-<div class="material-name">
-КЛЕЙ
+<div class="material-name">СЕПАРАТОР</div>
+<div id="separatorStatus" class="status status-empty">⚪ НЕ УСТАНОВЛЕН</div>
+<div id="separatorValue" class="material-value">—</div>
+<button class="blue" onclick="startSeparatorScan()">ЗАМЕНИТЬ СЕПАРАТОР</button>
 </div>
-
-
-<div
-id="glueStatus"
-class="status status-empty">
-
-⚪ НЕ УСТАНОВЛЕН
-
-</div>
-
-
-<div
-id="glueValue"
-class="material-value">
-
-—
-
-</div>
-
-
-<button
-class="blue"
-onclick="startGlueScan()">
-
-ЗАМЕНИТЬ КЛЕЙ
-
-</button>
-
-
-</div>
-
-
-
-<!-- ============================= -->
-<!-- СЕПАРАТОР -->
-<!-- ============================= -->
 
 <div class="material-block">
-
-
-<div class="material-name">
-СЕПАРАТОР
+<div class="material-name">МАГАЗИНЫ ЭЛЕКТРОДОВ</div>
+<div id="shopsStatus" class="status status-empty">⚪ НЕ УСТАНОВЛЕНЫ</div>
+<div id="shopsContainer"></div>
+<button id="addShopButton" class="blue" onclick="startShopScan()">＋ ДОБАВИТЬ МАГАЗИН</button>
 </div>
 
-
-<div
-id="separatorStatus"
-class="status status-empty">
-
-⚪ НЕ УСТАНОВЛЕН
-
+<button class="gray" onclick="changeMachine()">ВЫБРАТЬ ДРУГУЮ МАШИНУ</button>
+</div>
+</div>
 </div>
 
-
-<div
-id="separatorValue"
-class="material-value">
-
-—
-
-</div>
-
-
-<button
-class="blue"
-onclick="startSeparatorScan()">
-
-ЗАМЕНИТЬ СЕПАРАТОР
-
-</button>
-
-
-</div>
-
-
-
-<!-- ============================= -->
-<!-- МАГАЗИНЫ -->
-<!-- ============================= -->
-
-<div class="material-block">
-
-
-<div class="material-name">
-МАГАЗИНЫ ЭЛЕКТРОДОВ
-</div>
-
-
-<div
-id="shopsStatus"
-class="status status-empty">
-
-⚪ НЕ УСТАНОВЛЕНЫ
-
-</div>
-
-
-<div id="shopsContainer">
-
-</div>
-
-
-<button
-id="addShopButton"
-class="blue"
-onclick="startShopScan()">
-
-＋ ДОБАВИТЬ МАГАЗИН
-
-</button>
-
-
-</div>
-
-
-
-<button
-class="gray"
-onclick="changeMachine()">
-
-ВЫБРАТЬ ДРУГУЮ МАШИНУ
-
-</button>
-
-
-</div>
-
-
-</div>
-
-
-
-<!-- ============================= -->
-<!-- СКАНЕР -->
-<!-- ============================= -->
-
-<div
-id="scannerCard"
-class="card">
-
-
-<div
-id="scanTitle"
-class="machine-title">
-
-СКАНИРОВАНИЕ
-
-</div>
-
-
+<div id="scannerCard" class="card">
+<div id="scanTitle" class="machine-title">СКАНИРОВАНИЕ</div>
 <div id="scanner">
-
-
-<video
-id="video"
-autoplay
-muted
-playsinline>
-</video>
-
-
+<video id="video" autoplay muted playsinline></video>
 <div class="frame"></div>
-
-
-<div class="hint">
-
-Наведите код в рамку
-
+<div class="hint">Наведите код в рамку</div>
 </div>
-
-
-</div>
-
-
-<button
-id="stopScan"
-class="gray"
-onclick="stopScanner()">
-
-ОСТАНОВИТЬ КАМЕРУ
-
-</button>
-
-
+<button id="stopScan" class="gray" onclick="stopScanner()">ОСТАНОВИТЬ КАМЕРУ</button>
 <canvas id="canvas"></canvas>
-
-
 </div>
 
-
-
-<!-- ============================= -->
-<!-- ПОДТВЕРЖДЕНИЕ -->
-<!-- ============================= -->
-
-<div
-id="confirmBlock"
-class="card">
-
-
-<div class="machine-title">
-
-ПРОВЕРЬТЕ ДАННЫЕ
-
+<div id="confirmBlock" class="card">
+<div class="machine-title">ПРОВЕРЬТЕ ДАННЫЕ</div>
+<div id="confirmData" class="material-value"></div>
+<button class="blue" onclick="confirmOperation()">ПОДТВЕРДИТЬ И СОХРАНИТЬ</button>
+<button class="gray" onclick="cancelOperation()">ОТМЕНА</button>
 </div>
-
-
-<div
-id="confirmData"
-class="material-value">
-
-</div>
-
-
-<button
-class="blue"
-onclick="confirmOperation()">
-
-ПОДТВЕРДИТЬ И СОХРАНИТЬ
-
-</button>
-
-
-<button
-class="gray"
-onclick="cancelOperation()">
-
-ОТМЕНА
-
-</button>
-
-
-</div>
-
-
 
 <div id="status"></div>
-
-
 </div>
 
-
-
 <script>
+const BACKEND_URL="https://script.google.com/macros/s/AKfycbxoJXLeVPG3Yiqx6tTovtkONlXNfPwXgqJyrAcCDf_gSksrzTHSifwKZkIJkH7_s99O-g/exec";
+const QUEUE_KEY="zstacker_pending_operations_v1";
+const STATE_PREFIX="zstacker_state_v1_";
 
+let stream=null,scanning=false,timer=null;
+let currentOperator="",currentMachineId="",currentMachineName="";
+let currentOperation="",scannedCode="";
+let currentState=null;
 
-/* =========================================
-   НАСТРОЙКИ
-========================================= */
+function showStatus(message,type){
+  const el=document.getElementById("status");
+  el.style.display="block"; el.className=type||"info"; el.textContent=message;
+}
+function hideStatus(){document.getElementById("status").style.display="none"}
 
-
-const BACKEND_URL =
-"https://script.google.com/macros/s/AKfycbxoJXLeVPG3Yiqx6tTovtkONlXNfPwXgqJyrAcCDf_gSksrzTHSifwKZkIJkH7_s99O-g/exec";
-
-
-let stream = null;
-
-let scanning = false;
-
-let timer = null;
-
-let currentOperator = "";
-
-let currentMachineId = "";
-
-let currentMachineName = "";
-
-let currentOperation = "";
-
-let scannedCode = "";
-
-
-
-/* =========================================
-   СТАТУС
-========================================= */
-
-
-function showStatus(message, type) {
-
-  const el =
-    document.getElementById("status");
-
-  el.style.display = "block";
-
-  el.className = type || "info";
-
-  el.textContent = message;
-
+function setConnection(online,text){
+  const el=document.getElementById("connectionStatus");
+  el.className="connection "+(online?"online":"offline");
+  el.textContent=online?"🟢 ОНЛАЙН":"🟠 "+(text||"НЕТ СВЯЗИ");
+  updatePendingInfo();
+}
+function updatePendingInfo(){
+  const el=document.getElementById("pendingInfo");
+  const n=getQueue().length;
+  if(n>0){el.style.display="block";el.textContent="🟠 Операций ожидают отправки: "+n}
+  else el.style.display="none";
 }
 
-
-function hideStatus() {
-
-  document.getElementById(
-    "status"
-  ).style.display = "none";
-
+function getQueue(){
+  try{return JSON.parse(localStorage.getItem(QUEUE_KEY)||"[]")}catch(e){return []}
+}
+function setQueue(q){localStorage.setItem(QUEUE_KEY,JSON.stringify(q));updatePendingInfo()}
+function makeOperationId(){
+  return Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,10);
+}
+function getCachedState(machineId){
+  try{return JSON.parse(localStorage.getItem(STATE_PREFIX+machineId)||"null")}catch(e){return null}
+}
+function setCachedState(state){
+  if(state&&state.machineId)localStorage.setItem(STATE_PREFIX+state.machineId,JSON.stringify(state));
 }
 
-
-
-/* =========================================
-   ОТКРЫТИЕ МАШИНЫ
-========================================= */
-
-
-function openMachine() {
-
-
-  const operator =
-    document.getElementById(
-      "operator"
-    ).value;
-
-
-  const machineSelect =
-    document.getElementById(
-      "machine"
-    );
-
-
-  const machineId =
-    machineSelect.value;
-
-
-  if (!operator) {
-
-    document.getElementById(
-      "startStatus"
-    ).textContent =
-      "Сначала выберите оператора.";
-
-    return;
-
+function applyLocalOperation(state,op){
+  const s=Object.assign({},state||{machineId:currentMachineId,machine:currentMachineName,glue:"",separator:"",shop1:"",shop2:""});
+  if(op.operation==="Замена клея"||op.operation==="Установка клея")s.glue=op.materialCode;
+  if(op.operation==="Замена сепаратора"||op.operation==="Установка сепаратора")s.separator=op.materialCode;
+  if(op.operation==="Установка магазина"){
+    if(!s.shop1)s.shop1=op.materialCode; else if(!s.shop2)s.shop2=op.materialCode;
   }
-
-
-  if (!machineId) {
-
-    document.getElementById(
-      "startStatus"
-    ).textContent =
-      "Выберите Z-стекер.";
-
-    return;
-
+  if(op.operation==="Снятие магазина"){
+    if(String(s.shop1)===String(op.materialCode))s.shop1="";
+    else if(String(s.shop2)===String(op.materialCode))s.shop2="";
   }
+  s.updated=new Date().toISOString(); s.operator=op.operator;
+  return s;
+}
 
-
-  currentOperator =
-    operator;
-
-
-  currentMachineId =
-    machineId;
-
-
-  currentMachineName =
-    machineSelect.options[
-      machineSelect.selectedIndex
-    ].dataset.name;
-
-
-  document.getElementById(
-    "startScreen"
-  ).style.display =
-    "none";
-
-
-  document.getElementById(
-    "workScreen"
-  ).style.display =
-    "block";
-
-
-  document.getElementById(
-    "machineTitle"
-  ).textContent =
-    "Z-СТЕКЕР " +
-    currentMachineName;
-
-
-  document.getElementById(
-    "operatorInfo"
-  ).textContent =
-    "Оператор: " +
-    currentOperator;
-
-
+function openMachine(){
+  const operator=document.getElementById("operator").value;
+  const machineSelect=document.getElementById("machine");
+  const machineId=machineSelect.value;
+  if(!operator){document.getElementById("startStatus").textContent="Сначала выберите оператора.";return}
+  if(!machineId){document.getElementById("startStatus").textContent="Выберите Z-стекер.";return}
+  currentOperator=operator;currentMachineId=machineId;
+  currentMachineName=machineSelect.options[machineSelect.selectedIndex].dataset.name;
+  document.getElementById("startScreen").style.display="none";
+  document.getElementById("workScreen").style.display="block";
+  document.getElementById("machineTitle").textContent="Z-СТЕКЕР "+currentMachineName;
+  document.getElementById("operatorInfo").textContent="Оператор: "+currentOperator;
   loadState();
-
+  syncQueue();
 }
 
+async function loadState(){
+  const stateStatus=document.getElementById("stateStatus");
+  stateStatus.className="state-loading";stateStatus.textContent="🔄 Загрузка состояния машины...";
+  const cached=getCachedState(currentMachineId);
+  if(!navigator.onLine){
+    if(cached){currentState=cached;renderState(cached);stateStatus.className="state-error";stateStatus.textContent="🟠 НЕТ СВЯЗИ — показано последнее сохранённое состояние";}
+    else{stateStatus.className="state-error";stateStatus.textContent="🔴 Не удалось загрузить состояние машины. Нет связи с интернетом."}
+    setConnection(false);return;
+  }
+  try{
+    const url=BACKEND_URL+"?action=getState&machineId="+encodeURIComponent(currentMachineId);
+    const response=await fetch(url,{cache:"no-store"});
+    const text=await response.text();
+    if(text.startsWith("ERROR|"))throw new Error(text.substring(6));
+    const data=JSON.parse(text);
+    currentState=data;setCachedState(data);renderState(data);
+    stateStatus.className="state-ok";stateStatus.textContent="🟢 Состояние машины загружено";
+    setConnection(true);
+  }catch(e){
+    setConnection(false,"НЕТ СВЯЗИ");
+    if(cached){currentState=cached;renderState(cached);stateStatus.className="state-error";stateStatus.textContent="🔴 Не удалось загрузить состояние с сервера. Показано последнее сохранённое состояние."}
+    else{stateStatus.className="state-error";stateStatus.textContent="🔴 Не удалось загрузить состояние машины. Проверьте интернет."}
+  }
+}
 
+function renderState(data){
+  updateGlue(data.glue||"");updateSeparator(data.separator||"");updateShops(data.shop1||"",data.shop2||"");
+}
 
-/* =========================================
-   ПОЛУЧЕНИЕ СОСТОЯНИЯ
-========================================= */
-
-
-function loadState() {
-
-
-  showStatus(
-    "Загрузка состояния...",
-    "info"
-  );
-
-
-  const url =
-    BACKEND_URL +
-    "?action=getState" +
-    "&machineId=" +
-    encodeURIComponent(
-      currentMachineId
-    );
-
-
-  fetch(url)
-
-    .then(response =>
-      response.text()
-    )
-
-    .then(text => {
-
-
-      if (
-        text.startsWith("ERROR|")
-      ) {
-
-        showStatus(
-          text.substring(6),
-          "error"
-        );
-
-        return;
-
-      }
-
-
-      try {
-
-        const data =
-          JSON.parse(text);
-
-
-        updateGlue(
-          data.glue || ""
-        );
-
-
-        updateSeparator(
-          data.separator || ""
-        );
-
-
-        updateShops(
-
-          data.shop1 || "",
-
-          data.shop2 || ""
-
-        );
-
-
-        hideStatus();
-
-      }
-
-      catch(error) {
-
-        showStatus(
-          "Ошибка обработки состояния машины.",
-          "error"
-        );
-
-      }
-
-    })
-
-    .catch(error => {
-
-      showStatus(
-        "Ошибка связи с сервером.",
-        "error"
-      );
-
+function updateGlue(code){
+  const s=document.getElementById("glueStatus"),v=document.getElementById("glueValue");
+  if(code){s.textContent="🟢 УСТАНОВЛЕН";s.className="status status-installed";v.textContent=code}
+  else{s.textContent="⚪ НЕ УСТАНОВЛЕН";s.className="status status-empty";v.textContent="—"}
+}
+function updateSeparator(code){
+  const s=document.getElementById("separatorStatus"),v=document.getElementById("separatorValue");
+  if(code){s.textContent="🟢 УСТАНОВЛЕН";s.className="status status-installed";v.textContent=code}
+  else{s.textContent="⚪ НЕ УСТАНОВЛЕН";s.className="status status-empty";v.textContent="—"}
+}
+function updateShops(shop1,shop2){
+  const c=document.getElementById("shopsContainer"),s=document.getElementById("shopsStatus"),b=document.getElementById("addShopButton");
+  c.innerHTML="";const shops=[];if(shop1)shops.push(shop1);if(shop2)shops.push(shop2);
+  if(!shops.length){s.textContent="⚪ НЕ УСТАНОВЛЕНЫ";s.className="status status-empty"}
+  else{
+    s.textContent="🟢 УСТАНОВЛЕНЫ: "+shops.length;s.className="status status-installed";
+    shops.forEach(shop=>{
+      const row=document.createElement("div");row.className="shop-row";
+      const code=document.createElement("div");code.className="shop-code";code.textContent=shop;
+      const btn=document.createElement("button");btn.className="danger";btn.textContent="СНЯТЬ";btn.onclick=()=>removeShop(shop);
+      row.appendChild(code);row.appendChild(btn);c.appendChild(row);
     });
-
+  }
+  b.style.display=shops.length>=2?"none":"block";
 }
 
-
-
-/* =========================================
-   ОБНОВЛЕНИЕ КЛЕЯ
-========================================= */
-
-
-function updateGlue(code) {
-
-
-  const status =
-    document.getElementById(
-      "glueStatus"
-    );
-
-
-  const value =
-    document.getElementById(
-      "glueValue"
-    );
-
-
-  if (code) {
-
-    status.textContent =
-      "🟢 УСТАНОВЛЕН";
-
-    status.className =
-      "status status-installed";
-
-    value.textContent =
-      code;
-
-  }
-
-  else {
-
-    status.textContent =
-      "⚪ НЕ УСТАНОВЛЕН";
-
-    status.className =
-      "status status-empty";
-
-    value.textContent =
-      "—";
-
-  }
-
+function startGlueScan(){startScan("Замена клея","СКАНИРУЙТЕ КЛЕЙ")}
+function startSeparatorScan(){startScan("Замена сепаратора","СКАНИРУЙТЕ СЕПАРАТОР")}
+function startShopScan(){
+  const shopCount=[currentState?.shop1,currentState?.shop2].filter(Boolean).length;
+  if(shopCount>=2){showStatus("На машине уже установлены 2 магазина.","error");return}
+  startScan("Установка магазина","СКАНИРУЙТЕ МАГАЗИН");
 }
-
-
-
-/* =========================================
-   ОБНОВЛЕНИЕ СЕПАРАТОРА
-========================================= */
-
-
-function updateSeparator(code) {
-
-
-  const status =
-    document.getElementById(
-      "separatorStatus"
-    );
-
-
-  const value =
-    document.getElementById(
-      "separatorValue"
-    );
-
-
-  if (code) {
-
-    status.textContent =
-      "🟢 УСТАНОВЛЕН";
-
-    status.className =
-      "status status-installed";
-
-    value.textContent =
-      code;
-
-  }
-
-  else {
-
-    status.textContent =
-      "⚪ НЕ УСТАНОВЛЕН";
-
-    status.className =
-      "status status-empty";
-
-    value.textContent =
-      "—";
-
-  }
-
-}
-
-
-
-/* =========================================
-   ОБНОВЛЕНИЕ МАГАЗИНОВ
-========================================= */
-
-
-function updateShops(
-  shop1,
-  shop2
-) {
-
-
-  const container =
-    document.getElementById(
-      "shopsContainer"
-    );
-
-
-  const status =
-    document.getElementById(
-      "shopsStatus"
-    );
-
-
-  const addButton =
-    document.getElementById(
-      "addShopButton"
-    );
-
-
-  container.innerHTML = "";
-
-
-  const shops = [];
-
-
-  if (shop1) {
-    shops.push(shop1);
-  }
-
-
-  if (shop2) {
-    shops.push(shop2);
-  }
-
-
-  if (shops.length === 0) {
-
-
-    status.textContent =
-      "⚪ НЕ УСТАНОВЛЕНЫ";
-
-    status.className =
-      "status status-empty";
-
-
-  }
-
-  else {
-
-
-    status.textContent =
-      "🟢 УСТАНОВЛЕНЫ: " +
-      shops.length;
-
-    status.className =
-      "status status-installed";
-
-
-    shops.forEach(
-      function(shop) {
-
-
-        const row =
-          document.createElement(
-            "div"
-          );
-
-
-        row.className =
-          "shop-row";
-
-
-        const code =
-          document.createElement(
-            "div"
-          );
-
-
-        code.className =
-          "shop-code";
-
-
-        code.textContent =
-          shop;
-
-
-        const button =
-          document.createElement(
-            "button"
-          );
-
-
-        button.className =
-          "danger";
-
-
-        button.textContent =
-          "СНЯТЬ";
-
-
-        button.onclick =
-          function() {
-
-            removeShop(shop);
-
-          };
-
-
-        row.appendChild(code);
-
-        row.appendChild(button);
-
-        container.appendChild(row);
-
-      }
-
-    );
-
-  }
-
-
-  if (shops.length >= 2) {
-
-    addButton.style.display =
-      "none";
-
-  }
-
-  else {
-
-    addButton.style.display =
-      "block";
-
-  }
-
-}
-
-
-
-/* =========================================
-   ЗАПУСК СКАНЕРА
-========================================= */
-
-
-function startScan(
-  operation,
-  title
-) {
-
-
-  currentOperation =
-    operation;
-
-
-  scannedCode = "";
-
-
-  document.getElementById(
-    "scannerCard"
-  ).style.display =
-    "block";
-
-
-  document.getElementById(
-    "scanTitle"
-  ).textContent =
-    title;
-
-
-  document.getElementById(
-    "confirmBlock"
-  ).style.display =
-    "none";
-
-
+function startScan(operation,title){
+  currentOperation=operation;scannedCode="";
+  document.getElementById("scannerCard").style.display="block";
+  document.getElementById("scanTitle").textContent=title;
+  document.getElementById("confirmBlock").style.display="none";
   startScanner();
-
 }
 
-
-
-/* =========================================
-   КНОПКИ СКАНИРОВАНИЯ
-========================================= */
-
-
-function startGlueScan() {
-
-  startScan(
-    "Замена клея",
-    "СКАНИРУЙТЕ КЛЕЙ"
-  );
-
+async function startScanner(){
+  try{
+    if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)throw new Error("Браузер не поддерживает камеру");
+    stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:"environment"},width:{ideal:1920},height:{ideal:1080}}});
+    const video=document.getElementById("video");video.srcObject=stream;video.setAttribute("playsinline","");video.muted=true;await video.play();
+    document.getElementById("scanner").style.display="block";document.getElementById("stopScan").style.display="block";scanning=true;
+    showStatus("Камера работает. Ищу код...","info");scanLoop();
+  }catch(e){stopScanner();showStatus("Не удалось открыть камеру: "+(e.name||e.message),"error")}
 }
-
-
-function startSeparatorScan() {
-
-  startScan(
-    "Замена сепаратора",
-    "СКАНИРУЙТЕ СЕПАРАТОР"
-  );
-
+function scanLoop(){
+  if(!scanning)return;
+  const video=document.getElementById("video"),canvas=document.getElementById("canvas");
+  if(video.readyState>=2&&video.videoWidth){
+    canvas.width=video.videoWidth;canvas.height=video.videoHeight;
+    const ctx=canvas.getContext("2d",{willReadFrequently:true});ctx.drawImage(video,0,0,canvas.width,canvas.height);
+    const image=ctx.getImageData(0,0,canvas.width,canvas.height);
+    const result=jsQR(image.data,image.width,image.height,{inversionAttempts:"attemptBoth"});
+    if(result&&result.data){scannedCode=result.data;stopScanner();showConfirmation();return}
+  }
+  timer=setTimeout(scanLoop,120);
 }
-
-
-function startShopScan() {
-
-  startScan(
-    "Установка магазина",
-    "СКАНИРУЙТЕ МАГАЗИН"
-  );
-
+function stopScanner(){
+  scanning=false;if(timer)clearTimeout(timer);timer=null;
+  if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}
+  document.getElementById("video").srcObject=null;
+  document.getElementById("scanner").style.display="none";document.getElementById("stopScan").style.display="none";
 }
-
-
-
-/* =========================================
-   КАМЕРА
-========================================= */
-
-
-async function startScanner() {
-
-
-  try {
-
-
-    if (
-      !navigator.mediaDevices ||
-      !navigator.mediaDevices.getUserMedia
-    ) {
-
-      showStatus(
-        "Браузер не поддерживает камеру.",
-        "error"
-      );
-
-      return;
-
-    }
-
-
-    stream =
-      await navigator.mediaDevices.getUserMedia({
-
-        audio: false,
-
-        video: {
-
-          facingMode: {
-            ideal: "environment"
-          },
-
-          width: {
-            ideal: 1920
-          },
-
-          height: {
-            ideal: 1080
-          }
-
-        }
-
-      });
-
-
-    const video =
-      document.getElementById(
-        "video"
-      );
-
-
-    video.srcObject =
-      stream;
-
-
-    video.setAttribute(
-      "playsinline",
-      ""
-    );
-
-
-    video.muted = true;
-
-
-    await video.play();
-
-
-    document.getElementById(
-      "scanner"
-    ).style.display =
-      "block";
-
-
-    document.getElementById(
-      "stopScan"
-    ).style.display =
-      "block";
-
-
-    scanning = true;
-
-
-    showStatus(
-      "Камера работает. Ищу код...",
-      "info"
-    );
-
-
-    scanLoop();
-
-
-  }
-
-  catch(error) {
-
-
-    stopScanner();
-
-
-    showStatus(
-      "Не удалось открыть камеру: " +
-      (
-        error.name ||
-        error.message
-      ),
-      "error"
-    );
-
-  }
-
+function showConfirmation(){
+  document.getElementById("confirmBlock").style.display="block";
+  document.getElementById("confirmData").innerHTML="<b>Машина:</b> "+escapeHtml(currentMachineName)+"<br><br><b>Оператор:</b> "+escapeHtml(currentOperator)+"<br><br><b>Операция:</b> "+escapeHtml(currentOperation)+"<br><br><b>Код:</b> "+escapeHtml(scannedCode);
+  showStatus("Код считан. Проверьте данные.","info");
 }
-
-
-
-/* =========================================
-   ЦИКЛ СКАНИРОВАНИЯ
-========================================= */
-
-
-function scanLoop() {
-
-
-  if (!scanning) {
-    return;
-  }
-
-
-  const video =
-    document.getElementById(
-      "video"
-    );
-
-
-  const canvas =
-    document.getElementById(
-      "canvas"
-    );
-
-
-  if (
-    video.readyState >= 2 &&
-    video.videoWidth
-  ) {
-
-
-    canvas.width =
-      video.videoWidth;
-
-
-    canvas.height =
-      video.videoHeight;
-
-
-    const context =
-      canvas.getContext(
-        "2d",
-        {
-          willReadFrequently:
-            true
-        }
-      );
-
-
-    context.drawImage(
-      video,
-      0,
-      0,
-      canvas.width,
-      canvas.height
-    );
-
-
-    const image =
-      context.getImageData(
-        0,
-        0,
-        canvas.width,
-        canvas.height
-      );
-
-
-    const result =
-      jsQR(
-
-        image.data,
-
-        image.width,
-
-        image.height,
-
-        {
-          inversionAttempts:
-            "attemptBoth"
-        }
-
-      );
-
-
-    if (
-      result &&
-      result.data
-    ) {
-
-
-      scannedCode =
-        result.data;
-
-
-      stopScanner();
-
-
-      showConfirmation();
-
-
-      return;
-
-    }
-
-  }
-
-
-  timer =
-    setTimeout(
-      scanLoop,
-      120
-    );
-
-}
-
-
-
-/* =========================================
-   ОСТАНОВКА КАМЕРЫ
-========================================= */
-
-
-function stopScanner() {
-
-
-  scanning = false;
-
-
-  if (timer) {
-
-    clearTimeout(timer);
-
-  }
-
-
-  timer = null;
-
-
-  if (stream) {
-
-    stream
-      .getTracks()
-      .forEach(
-        function(track) {
-
-          track.stop();
-
-        }
-      );
-
-    stream = null;
-
-  }
-
-
-  const video =
-    document.getElementById(
-      "video"
-    );
-
-
-  video.srcObject = null;
-
-
-  document.getElementById(
-    "scanner"
-  ).style.display =
-    "none";
-
-
-  document.getElementById(
-    "stopScan"
-  ).style.display =
-    "none";
-
-}
-
-
-
-/* =========================================
-   ПОДТВЕРЖДЕНИЕ
-========================================= */
-
-
-function showConfirmation() {
-
-
-  const type =
-    currentOperation;
-
-
-  document.getElementById(
-    "confirmBlock"
-  ).style.display =
-    "block";
-
-
-  document.getElementById(
-    "confirmData"
-  ).innerHTML =
-
-    "<b>Машина:</b> " +
-
-    escapeHtml(
-      currentMachineName
-    ) +
-
-    "<br><br>" +
-
-    "<b>Оператор:</b> " +
-
-    escapeHtml(
-      currentOperator
-    ) +
-
-    "<br><br>" +
-
-    "<b>Операция:</b> " +
-
-    escapeHtml(
-      type
-    ) +
-
-    "<br><br>" +
-
-    "<b>Код:</b> " +
-
-    escapeHtml(
-      scannedCode
-    );
-
-
-  showStatus(
-    "Код считан. Проверьте данные.",
-    "info"
-  );
-
-}
-
-
-
-/* =========================================
-   СОХРАНЕНИЕ ОПЕРАЦИИ
-========================================= */
-
-
-function confirmOperation() {
-
-
-  if (!scannedCode) {
-
-    showStatus(
-      "Код не найден.",
-      "error"
-    );
-
-    return;
-
-  }
-
-
-  showStatus(
-    "Сохраняем...",
-    "info"
-  );
-
-
-  const url =
-
-    BACKEND_URL +
-
-    "?action=save" +
-
-    "&operator=" +
-    encodeURIComponent(
-      currentOperator
-    ) +
-
-    "&machineId=" +
-    encodeURIComponent(
-      currentMachineId
-    ) +
-
-    "&machine=" +
-    encodeURIComponent(
-      currentMachineName
-    ) +
-
-    "&operation=" +
-    encodeURIComponent(
-      currentOperation
-    ) +
-
-    "&materialType=" +
-    encodeURIComponent(
-      getMaterialType()
-    ) +
-
-    "&materialCode=" +
-    encodeURIComponent(
-      scannedCode
-    ) +
-
-    "&batch=" +
-    encodeURIComponent(
-      scannedCode
-    );
-
-
-  fetch(url)
-
-    .then(response =>
-      response.text()
-    )
-
-    .then(text => {
-
-
-      if (
-        text.startsWith("ERROR|")
-      ) {
-
-        showStatus(
-          text.substring(6),
-          "error"
-        );
-
-        return;
-
-      }
-
-
-      document.getElementById(
-        "confirmBlock"
-      ).style.display =
-        "none";
-
-
-      document.getElementById(
-        "scannerCard"
-      ).style.display =
-        "none";
-
-
-      showStatus(
-        "✓ Операция успешно сохранена.",
-        "success"
-      );
-
-
-      scannedCode = "";
-
-
-      currentOperation = "";
-
-
-      loadState();
-
-    })
-
-    .catch(error => {
-
-      showStatus(
-        "Ошибка передачи данных.",
-        "error"
-      );
-
-    });
-
-}
-
-
-
-/* =========================================
-   ТИП МАТЕРИАЛА
-========================================= */
-
-
-function getMaterialType() {
-
-
-  if (
-    currentOperation ===
-    "Замена клея"
-  ) {
-
-    return "Клей";
-
-  }
-
-
-  if (
-    currentOperation ===
-    "Замена сепаратора"
-  ) {
-
-    return "Сепаратор";
-
-  }
-
-
-  if (
-    currentOperation ===
-    "Установка магазина"
-  ) {
-
-    return "Магазин электродов";
-
-  }
-
-
+function getMaterialType(){
+  if(currentOperation==="Замена клея")return "Клей";
+  if(currentOperation==="Замена сепаратора")return "Сепаратор";
+  if(currentOperation==="Установка магазина"||currentOperation==="Снятие магазина")return "Магазин электродов";
   return "";
-
 }
 
+async function saveOperation(op){
+  const queue=getQueue();queue.push(op);setQueue(queue);
+  if(currentState){currentState=applyLocalOperation(currentState,op);setCachedState(currentState);renderState(currentState)}
+  updatePendingInfo();
+  await syncQueue();
+}
 
+async function sendOperation(op){
+  const url=BACKEND_URL+
+    "?action=save"+
+    "&operator="+encodeURIComponent(op.operator)+
+    "&machineId="+encodeURIComponent(op.machineId)+
+    "&machine="+encodeURIComponent(op.machine)+
+    "&operation="+encodeURIComponent(op.operation)+
+    "&materialType="+encodeURIComponent(op.materialType)+
+    "&materialCode="+encodeURIComponent(op.materialCode)+
+    "&batch="+encodeURIComponent(op.batch||"")+
+    "&operationId="+encodeURIComponent(op.operationId);
+  const response=await fetch(url,{cache:"no-store"});
+  const text=await response.text();
+  if(!text.startsWith("OK|"))throw new Error(text.replace(/^ERROR\|/,""));
+  return text;
+}
 
-/* =========================================
-   СНЯТИЕ МАГАЗИНА
-========================================= */
-
-
-function removeShop(shopCode) {
-
-
-  const ok =
-    confirm(
-      "Снять магазин " +
-      shopCode +
-      "?"
-    );
-
-
-  if (!ok) {
-    return;
+async function syncQueue(){
+  const q=getQueue();if(!q.length){updatePendingInfo();return}
+  if(!navigator.onLine){setConnection(false);return}
+  setConnection(true);
+  const remaining=[];
+  let sent=0;
+  for(const op of q){
+    try{await sendOperation(op);sent++}
+    catch(e){remaining.push(op);break}
   }
-
-
-  currentOperation =
-    "Снятие магазина";
-
-
-  scannedCode =
-    shopCode;
-
-
-  showStatus(
-    "Снимаем магазин...",
-    "info"
-  );
-
-
-  const url =
-
-    BACKEND_URL +
-
-    "?action=save" +
-
-    "&operator=" +
-    encodeURIComponent(
-      currentOperator
-    ) +
-
-    "&machineId=" +
-    encodeURIComponent(
-      currentMachineId
-    ) +
-
-    "&machine=" +
-    encodeURIComponent(
-      currentMachineName
-    ) +
-
-    "&operation=" +
-    encodeURIComponent(
-      "Снятие магазина"
-    ) +
-
-    "&materialType=" +
-    encodeURIComponent(
-      "Магазин электродов"
-    ) +
-
-    "&materialCode=" +
-    encodeURIComponent(
-      shopCode
-    ) +
-
-    "&batch=" +
-    encodeURIComponent(
-      shopCode
-    );
-
-
-  fetch(url)
-
-    .then(response =>
-      response.text()
-    )
-
-    .then(text => {
-
-
-      if (
-        text.startsWith("ERROR|")
-      ) {
-
-        showStatus(
-          text.substring(6),
-          "error"
-        );
-
-        return;
-
-      }
-
-
-      showStatus(
-        "✓ Магазин снят.",
-        "success"
-      );
-
-
-      loadState();
-
-    })
-
-    .catch(error => {
-
-      showStatus(
-        "Ошибка передачи данных.",
-        "error"
-      );
-
-    });
-
+  setQueue(remaining);
+  if(sent>0){
+    showStatus("✓ Синхронизировано операций: "+sent,"success");
+    if(currentMachineId)await loadState();
+  }
+  updatePendingInfo();
 }
 
-
-
-/* =========================================
-   ОТМЕНА
-========================================= */
-
-
-function cancelOperation() {
-
-
-  scannedCode = "";
-
-  currentOperation = "";
-
-
-  stopScanner();
-
-
-  document.getElementById(
-    "scannerCard"
-  ).style.display =
-    "none";
-
-
-  document.getElementById(
-    "confirmBlock"
-  ).style.display =
-    "none";
-
-
-  showStatus(
-    "Операция отменена.",
-    "info"
-  );
-
+async function confirmOperation(){
+  if(!scannedCode){showStatus("Код не найден.","error");return}
+  const op={
+    operationId:makeOperationId(),
+    operator:currentOperator,
+    machineId:currentMachineId,
+    machine:currentMachineName,
+    operation:currentOperation,
+    materialType:getMaterialType(),
+    materialCode:scannedCode,
+    batch:scannedCode,
+    createdAt:new Date().toISOString()
+  };
+  showStatus(navigator.onLine?"Сохраняем...":"🟠 Нет связи. Сохраняем операцию на телефоне...","info");
+  try{
+    await saveOperation(op);
+    document.getElementById("confirmBlock").style.display="none";
+    document.getElementById("scannerCard").style.display="none";
+    scannedCode="";currentOperation="";
+    if(getQueue().some(x=>x.operationId===op.operationId)){
+      showStatus("🟠 Операция сохранена на телефоне и ожидает отправки.","info");
+    }else{
+      showStatus("✓ Операция сохранена и синхронизирована.","success");
+    }
+  }catch(e){showStatus("🔴 Не удалось сохранить операцию: "+e.message,"error")}
 }
 
-
-
-/* =========================================
-   ДРУГАЯ МАШИНА
-========================================= */
-
-
-function changeMachine() {
-
-
-  stopScanner();
-
-
-  document.getElementById(
-    "workScreen"
-  ).style.display =
-    "none";
-
-
-  document.getElementById(
-    "scannerCard"
-  ).style.display =
-    "none";
-
-
-  document.getElementById(
-    "confirmBlock"
-  ).style.display =
-    "none";
-
-
-  document.getElementById(
-    "startScreen"
-  ).style.display =
-    "block";
-
-
-  hideStatus();
-
+function removeShop(shopCode){
+  if(!confirm("Снять магазин "+shopCode+"?"))return;
+  const op={
+    operationId:makeOperationId(),operator:currentOperator,machineId:currentMachineId,machine:currentMachineName,
+    operation:"Снятие магазина",materialType:"Магазин электродов",materialCode:shopCode,batch:shopCode,createdAt:new Date().toISOString()
+  };
+  showStatus(navigator.onLine?"Снимаем магазин...":"🟠 Нет связи. Снятие сохранится на телефоне.","info");
+  saveOperation(op).then(()=>{
+    if(getQueue().some(x=>x.operationId===op.operationId))showStatus("🟠 Снятие магазина сохранено и ожидает отправки.","info");
+    else showStatus("✓ Магазин снят и синхронизирован.","success");
+  }).catch(e=>showStatus("🔴 Не удалось сохранить операцию: "+e.message,"error"));
 }
 
-
-
-/* =========================================
-   ЗАЩИТА HTML
-========================================= */
-
-
-function escapeHtml(text) {
-
-  return String(text)
-
-    .replace(
-      /&/g,
-      "&amp;"
-    )
-
-    .replace(
-      /</g,
-      "&lt;"
-    )
-
-    .replace(
-      />/g,
-      "&gt;"
-    )
-
-    .replace(
-      /"/g,
-      "&quot;"
-    )
-
-    .replace(
-      /'/g,
-      "&#039;"
-    );
-
+function cancelOperation(){
+  scannedCode="";currentOperation="";stopScanner();
+  document.getElementById("scannerCard").style.display="none";document.getElementById("confirmBlock").style.display="none";
+  showStatus("Операция отменена.","info");
+}
+function changeMachine(){
+  stopScanner();document.getElementById("workScreen").style.display="none";document.getElementById("scannerCard").style.display="none";
+  document.getElementById("confirmBlock").style.display="none";document.getElementById("startScreen").style.display="block";hideStatus();
+}
+function escapeHtml(text){
+  return String(text).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;");
 }
 
-
+window.addEventListener("online",async()=>{setConnection(true);await syncQueue()});
+window.addEventListener("offline",()=>{setConnection(false,"НЕТ СВЯЗИ")});
+setConnection(navigator.onLine);
+updatePendingInfo();
 </script>
-
-
 </body>
-
 </html>
