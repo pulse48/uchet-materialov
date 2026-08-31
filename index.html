@@ -61,6 +61,7 @@ canvas{display:none}
 
 <body>
 <div class="app">
+<div style="text-align:center;font-size:12px;color:#777;margin:0 0 10px">ТЕСТ СКАНЕРА • v3 • ИНВЕРСИЯ 1D</div>
 
 <h1>ТЕСТ СКАНЕРА</h1>
 <div class="subtitle">QR + 1D штрихкоды + Data Matrix</div>
@@ -119,6 +120,7 @@ canvas{display:none}
 </div>
 
 <canvas id="canvas"></canvas>
+<canvas id="workCanvas"></canvas>
 
 </div>
 
@@ -139,6 +141,13 @@ function setCameraStatus(text, type="info"){
   cameraStatus.textContent = text;
   cameraStatus.className = "status " + type;
 }
+
+function setDiagnostic(text, type="info"){
+  const el = document.getElementById("diagnostic");
+  el.textContent = text;
+  el.className = "status " + type;
+}
+
 
 function showResult(text, format, elapsed){
   document.getElementById("result").textContent = text || "—";
@@ -191,6 +200,7 @@ async function startScanner(){
       "Камера запускается. Ищу QR, Data Matrix и 1D штрихкод...",
       "info"
     );
+    setDiagnostic("Камера запущена. Проверяю разные типы кодов...", "info");
 
     startedAt = performance.now();
 
@@ -224,6 +234,7 @@ async function startScanner(){
               "✓ КОД СЧИТАН",
               "success"
             );
+            setDiagnostic("Камера: код распознан.", "success");
 
             if(navigator.vibrate){
               navigator.vibrate(120);
@@ -285,12 +296,13 @@ stopBtn.addEventListener("click", async () => {
   setCameraStatus("Камера остановлена.", "info");
 });
 
+
 document.getElementById("photo").addEventListener("change", async function(){
   const file = this.files && this.files[0];
   if(!file) return;
 
   const photoStatus = document.getElementById("photoStatus");
-  photoStatus.textContent = "Анализируем фотографию...";
+  photoStatus.textContent = "Пробуем обычный и инвертированный вариант...";
   photoStatus.className = "status info";
 
   try{
@@ -303,31 +315,140 @@ document.getElementById("photo").addEventListener("change", async function(){
 
     img.onload = async () => {
       try{
-        const imageReader = new ZXingBrowser.BrowserMultiFormatReader();
+        const reader = new ZXingBrowser.BrowserMultiFormatReader();
 
-        const result = await imageReader.decodeFromImageElement(img);
+        // 1) Original image
+        try{
+          const result = await reader.decodeFromImageElement(img);
+          if(result){
+            const text = result.getText();
+            const format = result.getBarcodeFormat ? String(result.getBarcodeFormat()) : "UNKNOWN";
+            showResult(text, format, 0);
+            addHistory(text, format);
+            photoStatus.textContent = "✓ Код найден на исходной фотографии.";
+            photoStatus.className = "status success";
+            setDiagnostic("Фото: обычный вариант сработал.", "success");
+            URL.revokeObjectURL(url);
+            return;
+          }
+        }catch(e){}
 
-        if(result){
-          const text = result.getText();
-          const format = result.getBarcodeFormat
-            ? String(result.getBarcodeFormat())
-            : "UNKNOWN";
+        // 2) Crop + grayscale/invert variants
+        const c = document.getElementById("workCanvas");
+        const ctx = c.getContext("2d", {willReadFrequently:true});
 
-          showResult(text, format, 0);
-          addHistory(text, format);
+        const scale = Math.min(1, 1600 / img.width);
+        const w = Math.max(1, Math.round(img.width * scale));
+        const h = Math.max(1, Math.round(img.height * scale));
 
-          photoStatus.textContent =
-            "✓ Код найден на фотографии.";
-          photoStatus.className = "status success";
-        }else{
-          photoStatus.textContent =
-            "Код на фотографии не найден.";
-          photoStatus.className = "status error";
+        c.width = w; c.height = h;
+        ctx.drawImage(img, 0, 0, w, h);
+
+        const source = ctx.getImageData(0,0,w,h);
+        const variants = [];
+
+        // Full grayscale
+        const gray = new ImageData(new Uint8ClampedArray(source.data), w, h);
+        for(let i=0;i<gray.data.length;i+=4){
+          const y = Math.round(0.299*gray.data[i] + 0.587*gray.data[i+1] + 0.114*gray.data[i+2]);
+          gray.data[i]=gray.data[i+1]=gray.data[i+2]=y;
         }
-      }catch(e){
-        photoStatus.textContent =
-          "Код на фотографии не распознан.";
+        ctx.putImageData(gray,0,0);
+        variants.push({name:"серый", dataURL:c.toDataURL("image/png")});
+
+        // Full inverted
+        const inv = new ImageData(new Uint8ClampedArray(gray.data), w, h);
+        for(let i=0;i<inv.data.length;i+=4){
+          const y = inv.data[i];
+          inv.data[i]=inv.data[i+1]=inv.data[i+2]=255-y;
+        }
+        ctx.putImageData(inv,0,0);
+        variants.push({name:"инверсия", dataURL:c.toDataURL("image/png")});
+
+        // Horizontal strips: center and upper half, both original/inverted.
+        const strips = [
+          {name:"полоса по центру", y:Math.round(h*0.30), sh:Math.round(h*0.40)},
+          {name:"верхняя полоса", y:Math.round(h*0.15), sh:Math.round(h*0.45)},
+          {name:"нижняя полоса", y:Math.round(h*0.45), sh:Math.round(h*0.40)}
+        ];
+
+        const tryImage = async (dataURL, name) => {
+          const testImg = new Image();
+          await new Promise((resolve,reject)=>{
+            testImg.onload=resolve; testImg.onerror=reject; testImg.src=dataURL;
+          });
+          try{
+            const r = await reader.decodeFromImageElement(testImg);
+            if(r){
+              const text=r.getText();
+              const format=r.getBarcodeFormat ? String(r.getBarcodeFormat()) : "UNKNOWN";
+              return {text,format,name};
+            }
+          }catch(e){}
+          return null;
+        };
+
+        for(const v of variants){
+          const r = await tryImage(v.dataURL, v.name);
+          if(r){
+            showResult(r.text,r.format,0);
+            addHistory(r.text,r.format);
+            photoStatus.textContent = "✓ Код найден: " + r.name + ".";
+            photoStatus.className = "status success";
+            setDiagnostic("Фото: сработала обработка «" + r.name + "».", "success");
+            URL.revokeObjectURL(url);
+            return;
+          }
+        }
+
+        for(const s of strips){
+          const strip = document.createElement("canvas");
+          strip.width = w;
+          strip.height = s.sh;
+          const sx = strip.getContext("2d");
+          sx.drawImage(img,0,s.y,w,s.sh,0,0,w,s.sh);
+
+          const originalURL = strip.toDataURL("image/png");
+          const r1 = await tryImage(originalURL, s.name + ", обычный");
+          if(r1){
+            showResult(r1.text,r1.format,0);
+            addHistory(r1.text,r1.format);
+            photoStatus.textContent = "✓ Код найден: " + r1.name + ".";
+            photoStatus.className = "status success";
+            setDiagnostic("Фото: сработала " + r1.name + ".", "success");
+            URL.revokeObjectURL(url);
+            return;
+          }
+
+          const sd = sx.getImageData(0,0,w,s.sh);
+          for(let i=0;i<sd.data.length;i+=4){
+            const y = Math.round(0.299*sd.data[i] + 0.587*sd.data[i+1] + 0.114*sd.data[i+2]);
+            const invY = 255-y;
+            sd.data[i]=sd.data[i+1]=sd.data[i+2]=invY;
+          }
+          sx.putImageData(sd,0,0);
+
+          const invertedURL = strip.toDataURL("image/png");
+          const r2 = await tryImage(invertedURL, s.name + ", инверсия");
+          if(r2){
+            showResult(r2.text,r2.format,0);
+            addHistory(r2.text,r2.format);
+            photoStatus.textContent = "✓ Код найден: " + r2.name + ".";
+            photoStatus.className = "status success";
+            setDiagnostic("Фото: сработала " + r2.name + ".", "success");
+            URL.revokeObjectURL(url);
+            return;
+          }
+        }
+
+        photoStatus.textContent = "Код на фотографии не распознан.";
         photoStatus.className = "status error";
+        setDiagnostic("Фото: не найден ни один поддерживаемый код.", "error");
+
+      }catch(e){
+        photoStatus.textContent = "Ошибка анализа фотографии.";
+        photoStatus.className = "status error";
+        setDiagnostic("Ошибка анализа фото: " + (e.message || e), "error");
       }finally{
         URL.revokeObjectURL(url);
       }
@@ -343,8 +464,7 @@ document.getElementById("photo").addEventListener("change", async function(){
 
   }catch(error){
     photoStatus.textContent =
-      "Ошибка анализа фотографии: " +
-      (error.message || error);
+      "Ошибка анализа фотографии: " + (error.message || error);
     photoStatus.className = "status error";
   }
 });
