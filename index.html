@@ -4,9 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#222">
-<title>Учёт материалов — WORK v7 · SCANNER v8</title>
+<title>Учёт материалов — WORK v8 · SCANNER v8</title>
 <script src="https://unpkg.com/@zxing/browser@0.1.5/umd/zxing-browser.min.js"></script>
 <style>
+/* WORK v8: dynamic Settings + persistent operator/machine + current backend */
 *{box-sizing:border-box}
 body{margin:0;padding:18px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:#f4f4f4;color:#222}
 .app{max-width:520px;margin:auto}
@@ -116,29 +117,13 @@ button{width:100%;border:0;border-radius:12px;padding:15px;font-size:16px;font-w
 </head>
 <body>
 <div class="app">
-<h1>УЧЁТ МАТЕРИАЛОВ</h1>
-<div class="subtitle">Z-стекеры</div>
-<div style="text-align:center;font-size:12px;color:#777;margin-top:6px">WORK v7 · SCANNER v8</div><div style="text-align:center;font-size:11px;color:#888;margin-top:3px">Время операций: Москва (UTC+3)</div>
 <div id="connectionStatus" class="connection online">🟢 ОНЛАЙН</div>
 
 <div id="startScreen" class="card">
 <label>Оператор</label>
-<select id="operator">
-<option value="">Выберите оператора</option>
-<option value="Иванов И.И.">Иванов И.И.</option>
-<option value="Петров П.П.">Петров П.П.</option>
-<option value="Сидоров С.С.">Сидоров С.С.</option>
-</select>
+<select id="operator"><option value="">Загрузка операторов...</option></select>
 <label style="margin-top:18px">Z-стекер</label>
-<select id="machine">
-<option value="">Выберите Z-стекер</option>
-<option value="ZST-001" data-name="Z-01">Z-01</option>
-<option value="ZST-002" data-name="Z-02">Z-02</option>
-<option value="ZST-003" data-name="Z-03">Z-03</option>
-<option value="ZST-004" data-name="Z-04">Z-04</option>
-<option value="ZST-005" data-name="Z-05">Z-05</option>
-<option value="ZST-006" data-name="Z-06">Z-06</option>
-</select>
+<select id="machine"><option value="">Загрузка Z-стекеров...</option></select>
 <button class="primary" onclick="openMachine()">ОТКРЫТЬ Z-СТЕКЕР</button>
 <div id="startStatus" class="small" style="margin-top:12px">Выберите оператора и машину</div>
 </div>
@@ -193,14 +178,16 @@ button{width:100%;border:0;border-radius:12px;padding:15px;font-size:16px;font-w
 <div id="shopsContainer"></div>
 <button id="addShopButton" class="blue" onclick="startShopScan()">＋ ДОБАВИТЬ МАГАЗИН</button>
 </div>
-<button class="gray" onclick="changeMachine()">ВЫБРАТЬ ДРУГУЮ МАШИНУ</button>
+<button class="gray" onclick="changeMachine()">СМЕНИТЬ МАШИНУ</button>
+<button class="gray" onclick="changeOperator()">СМЕНИТЬ ОПЕРАТОРА</button>
 </div>
 </div>
+
+<div id="bottomControls" style="text-align:center;margin:8px 0 18px">
+  <button class="gray" onclick="refreshConfig()" style="font-size:14px">↻ ОБНОВИТЬ СПИСКИ</button>
+  <div style="font-size:11px;color:#888;margin-top:8px">WORK v8 · SCANNER v8</div>
+  <div style="font-size:11px;color:#aaa;margin-top:3px">Время операций: Москва (UTC+3)</div>
 </div>
-
-
-
-
 
 </div>
 
@@ -226,7 +213,11 @@ function getMoscowDateTimeDisplay(){
     hour12: false
   }).format(new Date());
 }
-const BACKEND_URL="https://script.google.com/macros/s/AKfycbxoJXLeVPG3Yiqx6tTovtkONlXNfPwXgqJyrAcCDf_gSksrzTHSifwKZkIJkH7_s99O-g/exec";
+const BACKEND_URL="https://script.google.com/macros/s/AKfycbzk6H83TSHfYhsbUVW54iX7Tr7eUmyP25q9k0BXBZm8e3wL6L4OjL10Ba9XLiSbafqT/exec";
+const CONFIG_KEY="zstacker_config_v8";
+const OPERATOR_KEY="zstacker_operator_v8";
+const MACHINE_KEY="zstacker_machine_v8";
+let appConfig={operators:[],machines:[],version:"WORK v8",scannerVersion:"SCANNER v8"};
 const QUEUE_KEY="zstacker_pending_operations_v2";
 const STATE_PREFIX="zstacker_state_v2_";
 
@@ -295,11 +286,123 @@ function applyLocalOperation(state,op){
   s.updated=getMoscowTimestamp();s.operator=op.operator;return s;
 }
 
+
+function saveSelection(){
+  if(currentOperator) localStorage.setItem(OPERATOR_KEY,currentOperator);
+  if(currentMachineId) localStorage.setItem(MACHINE_KEY,currentMachineId);
+}
+
+function populateConfig(cfg){
+  appConfig=cfg||appConfig;
+  const opSel=document.getElementById("operator");
+  const mSel=document.getElementById("machine");
+  const oldOp=currentOperator||localStorage.getItem(OPERATOR_KEY)||opSel.value||"";
+  const oldMachine=currentMachineId||localStorage.getItem(MACHINE_KEY)||mSel.value||"";
+
+  opSel.innerHTML='<option value="">Выберите оператора</option>';
+  (appConfig.operators||[]).forEach(o=>{
+    const opt=document.createElement("option");
+    opt.value=o.name;
+    opt.textContent=o.name;
+    opSel.appendChild(opt);
+  });
+
+  mSel.innerHTML='<option value="">Выберите Z-стекер</option>';
+  (appConfig.machines||[]).forEach(m=>{
+    const opt=document.createElement("option");
+    opt.value=m.id;
+    opt.textContent=m.name;
+    opt.dataset.name=m.name;
+    mSel.appendChild(opt);
+  });
+
+  if((appConfig.operators||[]).some(o=>o.name===oldOp)) opSel.value=oldOp;
+  if((appConfig.machines||[]).some(m=>m.id===oldMachine)) mSel.value=oldMachine;
+}
+
+async function loadConfig(){
+  try{
+    const r=await fetch(BACKEND_URL+"?action=getConfig",{cache:"no-store"});
+    const text=await r.text();
+    if(text.startsWith("ERROR|")) throw new Error(text.substring(6));
+    const cfg=JSON.parse(text);
+    localStorage.setItem(CONFIG_KEY,JSON.stringify(cfg));
+    populateConfig(cfg);
+    setConnection(true);
+    return cfg;
+  }catch(e){
+    try{
+      const cached=JSON.parse(localStorage.getItem(CONFIG_KEY)||"null");
+      if(cached){
+        populateConfig(cached);
+        setConnection(false,"НЕТ СВЯЗИ — списки из памяти");
+        return cached;
+      }
+    }catch(_){}
+    setConnection(false,"НЕТ СВЯЗИ");
+    document.getElementById("startStatus").textContent="Не удалось загрузить списки. Проверьте интернет.";
+    return null;
+  }
+}
+
+async function refreshConfig(){
+  document.getElementById("startStatus").textContent="Обновляем списки...";
+  const cfg=await loadConfig();
+  if(cfg){
+    document.getElementById("startStatus").textContent="Списки обновлены.";
+    if(currentMachineId){
+      const m=(cfg.machines||[]).find(x=>x.id===currentMachineId);
+      if(m){
+        currentMachineName=m.name;
+        document.getElementById("machineTitle").textContent="Z-СТЕКЕР "+currentMachineName;
+        document.getElementById("operatorInfo").textContent="Оператор: "+currentOperator;
+      }
+    }
+  }
+}
+
+function restoreSavedSession(){
+  const op=localStorage.getItem(OPERATOR_KEY)||"";
+  const mid=localStorage.getItem(MACHINE_KEY)||"";
+  const opExists=(appConfig.operators||[]).some(x=>x.name===op);
+  const m=(appConfig.machines||[]).find(x=>x.id===mid);
+
+  if(opExists && m){
+    currentOperator=op;
+    currentMachineId=mid;
+    currentMachineName=m.name;
+    document.getElementById("operator").value=op;
+    document.getElementById("machine").value=mid;
+    document.getElementById("startScreen").style.display="none";
+    document.getElementById("workScreen").style.display="block";
+    document.getElementById("machineTitle").textContent="Z-СТЕКЕР "+currentMachineName;
+    document.getElementById("operatorInfo").textContent="Оператор: "+currentOperator;
+    loadState();
+    syncQueue();
+    return true;
+  }
+  return false;
+}
+
+function changeOperator(){
+  stopScanner();
+  document.getElementById("workScreen").style.display="none";
+  document.getElementById("scannerCard").style.display="none";
+  document.getElementById("confirmBlock").style.display="none";
+  document.getElementById("startScreen").style.display="block";
+  hideStatus();
+  document.getElementById("operator").value="";
+  document.getElementById("startStatus").textContent="Выберите оператора.";
+  localStorage.removeItem(OPERATOR_KEY);
+  currentOperator="";
+}
+
 function openMachine(){
   const operator=document.getElementById("operator").value,m=document.getElementById("machine"),id=m.value;
   if(!operator){document.getElementById("startStatus").textContent="Сначала выберите оператора.";return}
   if(!id){document.getElementById("startStatus").textContent="Выберите Z-стекер.";return}
   currentOperator=operator;currentMachineId=id;currentMachineName=m.options[m.selectedIndex].dataset.name;
+  saveSelection();
   document.getElementById("startScreen").style.display="none";document.getElementById("workScreen").style.display="block";
   document.getElementById("machineTitle").textContent="Z-СТЕКЕР "+currentMachineName;
   document.getElementById("operatorInfo").textContent="Оператор: "+currentOperator;
@@ -635,11 +738,33 @@ function removeShop(shopCode){
   saveOperation(op).then(()=>{if(getQueue().some(x=>x.operationId===op.operationId))showStatus("🟠 Снятие магазина сохранено и ожидает отправки.","info");else showStatus("✓ Магазин снят и синхронизирован.","success")}).catch(e=>showStatus("🔴 Не удалось сохранить операцию: "+e.message,"error"))
 }
 function cancelOperation(){scannedRaw="";scannedLot="";scannedMeters="";currentOperation="";stopScanner();document.getElementById("scannerCard").style.display="none";document.getElementById("confirmBlock").style.display="none";showStatus("Операция отменена.","info")}
-function changeMachine(){stopScanner();document.getElementById("workScreen").style.display="none";document.getElementById("scannerCard").style.display="none";document.getElementById("confirmBlock").style.display="none";document.getElementById("startScreen").style.display="block";hideStatus()}
+function changeMachine(){
+  stopScanner();
+  document.getElementById("workScreen").style.display="none";
+  document.getElementById("scannerCard").style.display="none";
+  document.getElementById("confirmBlock").style.display="none";
+  document.getElementById("startScreen").style.display="block";
+  hideStatus();
+  document.getElementById("machine").value="";
+  document.getElementById("operator").value=currentOperator;
+  document.getElementById("startStatus").textContent="Выберите другой Z-стекер.";
+  localStorage.removeItem(MACHINE_KEY);
+  currentMachineId="";
+  currentMachineName="";
+}
 function escapeHtml(text){return String(text).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;")}
 window.addEventListener("online",async()=>{setConnection(true);await syncQueue()});
 window.addEventListener("offline",()=>setConnection(false,"НЕТ СВЯЗИ"));
 setConnection(navigator.onLine);updatePendingInfo();
+
+(async function initApp(){
+  try{
+    const cached=JSON.parse(localStorage.getItem(CONFIG_KEY)||"null");
+    if(cached) populateConfig(cached);
+  }catch(e){}
+  const cfg=await loadConfig();
+  if(cfg) restoreSavedSession();
+})();
 </script>
 </body>
 </html>
