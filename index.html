@@ -752,18 +752,73 @@ function changeMachine(){
   currentMachineId="";
   currentMachineName="";
 }
+/* WORK v8.1: дополнительная защита восстановления сессии при refresh/pageshow */
+window.addEventListener("pageshow",()=>{
+  const op=localStorage.getItem(OPERATOR_KEY)||"";
+  const mid=localStorage.getItem(MACHINE_KEY)||"";
+  if(!op || !mid) return;
+  const opOk=(appConfig.operators||[]).some(x=>x.name===op);
+  const m=(appConfig.machines||[]).find(x=>x.id===mid);
+  if(opOk && m){
+    currentOperator=op;
+    currentMachineId=mid;
+    currentMachineName=m.name;
+    document.getElementById("operator").value=op;
+    document.getElementById("machine").value=mid;
+    document.getElementById("startScreen").style.display="none";
+    document.getElementById("workScreen").style.display="block";
+    document.getElementById("machineTitle").textContent="Z-СТЕКЕР "+currentMachineName;
+    document.getElementById("operatorInfo").textContent="Оператор: "+currentOperator;
+  }
+});
 function escapeHtml(text){return String(text).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;")}
 window.addEventListener("online",async()=>{setConnection(true);await syncQueue()});
 window.addEventListener("offline",()=>setConnection(false,"НЕТ СВЯЗИ"));
 setConnection(navigator.onLine);updatePendingInfo();
 
 (async function initApp(){
+  let cached=null;
   try{
-    const cached=JSON.parse(localStorage.getItem(CONFIG_KEY)||"null");
+    cached=JSON.parse(localStorage.getItem(CONFIG_KEY)||"null");
     if(cached) populateConfig(cached);
   }catch(e){}
+
+  // Восстанавливаем рабочую сессию сразу из localStorage.
+  // Это предотвращает возврат на стартовый экран при обычном обновлении.
+  const restored=restoreSavedSession();
+
+  // Затем актуализируем списки с сервера.
   const cfg=await loadConfig();
-  if(cfg) restoreSavedSession();
+
+  if(cfg){
+    const op=localStorage.getItem(OPERATOR_KEY)||"";
+    const mid=localStorage.getItem(MACHINE_KEY)||"";
+    const opOk=(cfg.operators||[]).some(x=>x.name===op);
+    const m=(cfg.machines||[]).find(x=>x.id===mid);
+
+    if(restored && opOk && m){
+      currentOperator=op;
+      currentMachineId=mid;
+      currentMachineName=m.name;
+      document.getElementById("operator").value=op;
+      document.getElementById("machine").value=mid;
+      document.getElementById("startScreen").style.display="none";
+      document.getElementById("workScreen").style.display="block";
+      document.getElementById("machineTitle").textContent="Z-СТЕКЕР "+currentMachineName;
+      document.getElementById("operatorInfo").textContent="Оператор: "+currentOperator;
+    }else if(restored){
+      // Сохранённая машина или оператор больше неактивны.
+      localStorage.removeItem(OPERATOR_KEY);
+      localStorage.removeItem(MACHINE_KEY);
+      currentOperator="";
+      currentMachineId="";
+      currentMachineName="";
+      document.getElementById("startScreen").style.display="block";
+      document.getElementById("workScreen").style.display="none";
+    }else{
+      restoreSavedSession();
+    }
+  }
 })();
 </script>
 </body>
