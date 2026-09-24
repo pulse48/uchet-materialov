@@ -4,8 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#222">
-<title>Учёт материалов — WORK v8 · SCANNER v8.2</title>
+<title>Учёт материалов — WORK v8 · SCANNER v8.3</title>
 <script src="https://unpkg.com/@zxing/browser@0.1.5/umd/zxing-browser.min.js"></script>
+<script src="https://unpkg.com/@ericblade/quagga2@1.12.1/dist/quagga.min.js"></script>
 <style>
 /* WORK v8: dynamic Settings + persistent operator/machine + current backend */
 *{box-sizing:border-box}
@@ -185,7 +186,7 @@ button{width:100%;border:0;border-radius:12px;padding:15px;font-size:16px;font-w
 
 <div id="bottomControls" style="text-align:center;margin:8px 0 18px">
   <button class="gray" onclick="refreshConfig()" style="font-size:14px">↻ ОБНОВИТЬ СПИСКИ</button>
-  <div style="font-size:11px;color:#888;margin-top:8px">WORK v8 · SCANNER v8.2</div>
+  <div style="font-size:11px;color:#888;margin-top:8px">WORK v8 · SCANNER v8.3</div>
   <div style="font-size:11px;color:#aaa;margin-top:3px">Время операций: Москва (UTC+3)</div>
 </div>
 
@@ -217,7 +218,7 @@ const BACKEND_URL="https://script.google.com/macros/s/AKfycbzk6H83TSHfYhsbUVW54i
 const CONFIG_KEY="zstacker_config_v8";
 const OPERATOR_KEY="zstacker_operator_v8";
 const MACHINE_KEY="zstacker_machine_v8";
-let appConfig={operators:[],machines:[],version:"WORK v8",scannerVersion:"SCANNER v8.2"};
+let appConfig={operators:[],machines:[],version:"WORK v8",scannerVersion:"SCANNER v8.3"};
 const QUEUE_KEY="zstacker_pending_operations_v2";
 const STATE_PREFIX="zstacker_state_v2_";
 
@@ -486,7 +487,7 @@ async function startScanner(){
     cameraFrameNo=0;
     cameraDecodeBusy=false;
 
-    showStatus("Сканер v8.2: держите длинный штрихкод горизонтально и полностью в рамке.","info");
+    showStatus("Сканер v8.3: держите длинный штрихкод горизонтально и полностью в рамке.","info");
 
     zxingReader=new ZXingBrowser.BrowserMultiFormatReader();
 
@@ -555,6 +556,16 @@ async function cameraDecodeLoop(){
       return;
     }
 
+    // Резервный специализированный Code 128-декодер.
+    // Запускается реже и в 2400 px для длинных плотных кодов сепаратора.
+    if(cameraFrameNo%6===0){
+      const quaggaResult=await decodeOneDWithQuagga(sourceCanvas);
+      if(quaggaResult){
+        handleScanResult(quaggaResult.text);
+        return;
+      }
+    }
+
   }catch(e){
     // Отдельный неудачный кадр не является ошибкой — продолжаем сканирование.
   }finally{
@@ -564,6 +575,37 @@ async function cameraDecodeLoop(){
   if(scanning){
     cameraDecodeTimer=setTimeout(cameraDecodeLoop,80);
   }
+}
+
+async function decodeOneDWithQuagga(canvas){
+  if(!window.Quagga?.decodeSingle)return null;
+
+  return await new Promise(resolve=>{
+    try{
+      Quagga.decodeSingle({
+        src:canvas.toDataURL("image/png"),
+        numOfWorkers:0,
+        locate:true,
+        inputStream:{
+          size:2400,
+          singleChannel:false
+        },
+        locator:{
+          halfSample:false,
+          patchSize:"small"
+        },
+        decoder:{
+          readers:["code_128_reader"],
+          multiple:false
+        }
+      },result=>{
+        const text=result?.codeResult?.code;
+        resolve(text?{text,format:"CODE_128_QUAGGA"}:null);
+      });
+    }catch(e){
+      resolve(null);
+    }
+  });
 }
 
 async function decodeOneDVariants(sourceCanvas,frameNo){
